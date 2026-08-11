@@ -1,0 +1,51 @@
+@extends('layouts.app', ['role' => 'teacher', 'active' => 'students', 'title' => 'Students'])
+
+@section('content')
+<div class="space-y-5">
+  <div>
+    <h2 class="font-display font-semibold text-lg" style="color:var(--sg-text)">Students in My Classes</h2>
+    <p class="text-sm" style="color:var(--sg-text-muted)">All students across your assigned sections</p>
+  </div>
+
+  <div class="sg-card p-5">
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+      <div class="relative flex-1">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--sg-text-muted)"></i>
+        <input type="text" data-table-search="teacher-students-table" placeholder="Search students…" class="sg-input pl-9">
+      </div>
+      <select data-table-filter="teacher-students-table" data-filter-column="section" class="sg-select sm:w-48">
+        <option value="">All Sections</option>
+        <option>BSIT 1-A</option><option>BSIT 2-A</option><option>BSCS 1-A</option>
+      </select>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="sg-table" id="teacher-students-table">
+        <thead><tr><th>Student ID</th><th>Name</th><th>Section</th><th>Subject</th><th class="text-right">Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+  const roster = [];
+  Object.entries(gradeSheets).forEach(([key, list]) => {
+    const [code, section] = key.split(/-(.+)/);
+    const subj = teacherClasses.find(c => c.subjectCode === code && c.section === section);
+    list.forEach(s => roster.push({ ...s, section, subject: subj ? subj.subject : code }));
+  });
+
+  document.querySelector('#teacher-students-table tbody').innerHTML = roster.map(s => `
+    <tr>
+      <td class="font-medium" style="color:var(--sg-text)">${s.id}</td>
+      <td style="color:var(--sg-text)">${s.name}</td>
+      <td data-col="section" style="color:var(--sg-text-muted)">${s.section}</td>
+      <td style="color:var(--sg-text-muted)">${s.subject}</td>
+      <td class="text-right"><button class="sg-btn sg-btn-ghost !p-2" data-toast="Viewing profile for ${s.name} (demo only)." data-toast-type="info"><i data-lucide="eye" class="w-4 h-4"></i></button></td>
+    </tr>
+  `).join('');
+  SG.renderIcons();
+</script>
+@endpush

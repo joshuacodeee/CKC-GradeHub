@@ -5,27 +5,6 @@
    and app.js rendering logic will not need to change.
    ========================================================================== */
 
-const demoAccounts = [
-    {
-        email: "admin@example.com",
-        role: "admin",
-        name: "Dr. Ramon Villareal",
-        redirect: "/admin/dashboard",
-    },
-    {
-        email: "teacher@example.com",
-        role: "teacher",
-        name: "Prof. Andrea Reyes",
-        redirect: "/teacher/dashboard",
-    },
-    {
-        email: "student@example.com",
-        role: "student",
-        name: "Juan Dela Cruz",
-        redirect: "/student/dashboard",
-    },
-];
-
 const schoolInfo = {
     name: "Northbridge Institute of Technology",
     shortName: "NBIT",

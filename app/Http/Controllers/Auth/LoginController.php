@@ -27,26 +27,25 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // Determine if input is email or student_id
-        $fieldType = filter_var($request->login_id, FILTER_VALIDATE_EMAIL) ? 'email' : 'student_id';
+        $loginId = trim($request->login_id);
+        $fieldType = filter_var($loginId, FILTER_VALIDATE_EMAIL) ? 'email' : 'student_id';
 
         $credentials = [
-            $fieldType => $request->login_id,
+            $fieldType => $loginId,
             'password' => $request->password,
             'is_active' => true,
         ];
 
-        if (Auth::attempt($credentials, $request->has('remember'))) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             $user = Auth::user();
 
-            // Dynamic Redirection based on user role
             return match ($user->role) {
-                'faculty', 'teacher' => redirect()->intended(route('faculty.dashboard')),
+                'teacher' => redirect()->intended(route('teacher.dashboard')),
                 'student' => redirect()->intended(route('student.dashboard')),
                 'admin' => redirect()->intended(route('admin.dashboard')),
-                default => redirect()->route('home'),
+                default => redirect()->route('login'),
             };
         }
 
@@ -64,6 +63,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home')->with('info', 'Successfully logged out.');
+        return redirect()->route('login')->with('info', 'Successfully logged out.');
     }
 }

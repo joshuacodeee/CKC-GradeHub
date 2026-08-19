@@ -132,8 +132,6 @@
     </div>
   </div>
 
-  {{-- Mock data (must load before app.js) --}}
-  <script src="/js/mock-data.js"></script>
   <script src="/js/app.js"></script>
   @stack('scripts')
 

@@ -84,36 +84,6 @@
 
 @push('scripts')
 <script>
-  function renderSubjects() {
-    const tbody = document.querySelector('#subjects-table tbody');
-    tbody.innerHTML = subjects.map(s => `
-      <tr>
-        <td class="font-medium" style="color:var(--sg-text)">${s.code}</td>
-        <td style="color:var(--sg-text)">${s.name}</td>
-        <td style="color:var(--sg-text-muted)">${s.units}</td>
-        <td data-col="department" style="color:var(--sg-text-muted)">${s.department}</td>
-        <td data-col="status">${s.status === 'Active' ? '<span class="sg-badge sg-badge-success">Active</span>' : '<span class="sg-badge sg-badge-warning">Inactive</span>'}</td>
-        <td class="text-right">
-          <div class="inline-flex items-center gap-1">
-            <button class="sg-btn sg-btn-ghost !p-2" title="Edit" data-toast="Edit form would open here for ${s.name} (demo only)." data-toast-type="info"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-            <button class="sg-btn sg-btn-ghost !p-2" title="Delete" data-delete-row="${s.name}" style="color:var(--sg-danger)"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-    SG.renderIcons();
-  }
-  renderSubjects();
-
-  document.getElementById('add-subject-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const name = fd.get('name');
-    subjects.unshift({ code: fd.get('code'), name, units: fd.get('units'), department: fd.get('department'), status: fd.get('status') });
-    renderSubjects();
-    SG.closeModal('add-subject-modal');
-    this.reset();
-    SG.toast(`${name} was added to the subject catalog (demo only).`, 'success');
-  });
+  // Mock data placeholder
 </script>
 @endpush

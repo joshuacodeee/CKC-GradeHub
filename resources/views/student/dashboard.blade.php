@@ -45,17 +45,6 @@
 
 @push('scripts')
 <script>
-  document.getElementById('dash-grades-tbody').innerHTML = studentGrades.map(g => {
-    const r = SG.computeFinalGrade(g.prelim, g.midterm, g.final);
-    return `
-    <tr>
-      <td style="color:var(--sg-text)">${g.subject}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.prelim}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.midterm}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.final}</td>
-      <td class="text-center font-semibold" style="color:var(--sg-text)">${r.grade.toFixed(2)}</td>
-      <td>${r.passed ? '<span class="sg-badge sg-badge-success">Passed</span>' : '<span class="sg-badge sg-badge-danger">Failed</span>'}</td>
-    </tr>`;
-  }).join('');
+  // Mock data placeholder
 </script>
 @endpush

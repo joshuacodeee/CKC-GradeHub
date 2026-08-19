@@ -20,24 +20,6 @@
 
 @push('scripts')
 <script>
-  const bySubject = {};
-  teacherClasses.forEach(c => {
-    if (!bySubject[c.subjectCode]) bySubject[c.subjectCode] = { subject: c.subject, sections: [], students: 0 };
-    bySubject[c.subjectCode].sections.push(c.section);
-    bySubject[c.subjectCode].students += c.students;
-  });
-
-  document.getElementById('teacher-subjects-tbody').innerHTML = Object.entries(bySubject).map(([code, d]) => {
-    const meta = subjects.find(s => s.code === code) || { units: 3 };
-    return `
-    <tr>
-      <td class="font-medium" style="color:var(--sg-text)">${code}</td>
-      <td style="color:var(--sg-text)">${d.subject}</td>
-      <td style="color:var(--sg-text-muted)">${meta.units}</td>
-      <td>${d.sections.map(s => `<span class="sg-badge sg-badge-info mr-1 mb-1 inline-block">${s}</span>`).join('')}</td>
-      <td style="color:var(--sg-text)">${d.students}</td>
-    </tr>`;
-  }).join('');
-  SG.renderIcons();
+  // Mock data placeholder
 </script>
 @endpush

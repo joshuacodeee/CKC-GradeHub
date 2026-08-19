@@ -37,42 +37,6 @@
 
 @push('scripts')
 <script>
-  document.getElementById('teacher-classes-cards').innerHTML = teacherClasses.map(c => `
-    <div class="sg-card p-5">
-      <div class="flex items-center justify-between mb-2">
-        <span class="sg-badge sg-badge-info">${c.subjectCode}</span>
-        ${c.pending > 0 ? `<span class="sg-badge sg-badge-warning">${c.pending} pending</span>` : `<span class="sg-badge sg-badge-success">Complete</span>`}
-      </div>
-      <h4 class="font-display font-semibold" style="color:var(--sg-text)">${c.subject}</h4>
-      <p class="text-sm mb-3" style="color:var(--sg-text-muted)">${c.section} · ${c.schedule}</p>
-      <div class="flex items-center justify-between text-sm">
-        <span class="flex items-center gap-1.5" style="color:var(--sg-text-muted)"><i data-lucide="users" class="w-4 h-4"></i> ${c.students} Students</span>
-        <a href="/teacher/grades?subject=${c.subjectCode}&section=${encodeURIComponent(c.section)}" class="font-medium" style="color:var(--sg-navy-500)">Enter grades →</a>
-      </div>
-    </div>
-  `).join('');
-
-  document.getElementById('teacher-progress').innerHTML = teacherClasses.map(c => {
-    const pct = Math.round((c.submitted / c.students) * 100);
-    return `
-    <div>
-      <div class="flex justify-between text-sm mb-1">
-        <span style="color:var(--sg-text)">${c.subject} — ${c.section}</span>
-        <span class="font-semibold" style="color:var(--sg-text)">${c.submitted}/${c.students}</span>
-      </div>
-      <div class="h-2 rounded-full" style="background:var(--sg-navy-50)">
-        <div class="h-2 rounded-full" style="width:${pct}%; background:${pct === 100 ? 'var(--sg-success)' : 'var(--sg-navy-600)'}"></div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('teacher-activity').innerHTML = teacherActivities.map(a => `
-    <li class="flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:var(--sg-info-bg)"><i data-lucide="activity" class="w-4 h-4" style="color:var(--sg-navy-600)"></i></div>
-      <div class="min-w-0"><p class="text-sm" style="color:var(--sg-text)">${a.text}</p><p class="text-xs" style="color:var(--sg-text-muted)">${a.time}</p></div>
-    </li>
-  `).join('');
-
-  SG.renderIcons();
+  // Mock data placeholder
 </script>
 @endpush

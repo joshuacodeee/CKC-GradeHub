@@ -42,11 +42,7 @@
 
 @push('scripts')
 <script>
-  const reportRows = [
-    { subject: 'Programming 1', code: 'IT102', section: 'BSIT 1-A', teacher: 'Prof. Andrea Reyes', students: 45, avg: 86.4, status: 'Submitted' },
-    { subject: 'Database Management', code: 'IT201', section: 'BSIT 2-A', teacher: 'Prof. Miguel Santos', students: 38, avg: 89.1, status: 'Submitted' },
-    { subject: 'Web Development', code: 'IT202', section: 'BSCS 1-A', teacher: 'Prof. Andrea Reyes', students: 42, avg: 84.7, status: 'Pending' },
-    { subject: 'Networking', code: 'IT301', section: 'BSIT 3-A', teacher: 'Prof. Liza Domingo', students: 30, avg: 90.2, status: 'Submitted' },
+  // Mock data placeholder
   ];
 
   document.getElementById('reports-tbody').innerHTML = reportRows.map(r => `

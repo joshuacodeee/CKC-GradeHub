@@ -131,7 +131,6 @@
   </div>
 
   <div id="toast-container"></div>
-  <script src="/js/mock-data.js"></script>
   <script src="/js/app.js"></script>
   <script>if (window.SG && SG.renderIcons) SG.renderIcons();</script>
 </body>

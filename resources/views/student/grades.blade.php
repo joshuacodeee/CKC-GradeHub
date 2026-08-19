@@ -37,22 +37,6 @@
 
 @push('scripts')
 <script>
-  let totalUnits = 0, totalPoints = 0;
-  document.getElementById('grades-tbody').innerHTML = studentGrades.map(g => {
-    const r = SG.computeFinalGrade(g.prelim, g.midterm, g.final);
-    totalUnits += g.units;
-    totalPoints += g.units * r.grade;
-    return `
-    <tr>
-      <td style="color:var(--sg-text)">${g.subject} <span class="text-xs" style="color:var(--sg-text-muted)">(${g.code})</span><br><span class="text-xs" style="color:var(--sg-text-muted)">${g.instructor}</span></td>
-      <td style="color:var(--sg-text-muted)">${g.units}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.prelim}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.midterm}</td>
-      <td class="text-center" style="color:var(--sg-text-muted)">${g.final}</td>
-      <td class="text-center font-semibold" style="color:var(--sg-text)">${r.grade.toFixed(2)}</td>
-      <td>${r.passed ? '<span class="sg-badge sg-badge-success">Passed</span>' : '<span class="sg-badge sg-badge-danger">Failed</span>'}</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('gwa-cell').textContent = (totalPoints / totalUnits).toFixed(2);
+  // Mock data placeholder
 </script>
 @endpush

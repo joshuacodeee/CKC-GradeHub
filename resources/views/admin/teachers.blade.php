@@ -87,47 +87,6 @@
 
 @push('scripts')
 <script>
-  function teacherStatusBadge(status) {
-    return status === 'Active'
-      ? `<span class="sg-badge sg-badge-success">Active</span>`
-      : `<span class="sg-badge sg-badge-warning">On Leave</span>`;
-  }
-
-  function renderTeachers() {
-    const tbody = document.querySelector('#teachers-table tbody');
-    tbody.innerHTML = teachers.map(t => `
-      <tr>
-        <td class="font-medium" data-col="id" style="color:var(--sg-text)">${t.id}</td>
-        <td style="color:var(--sg-text)">${t.name}</td>
-        <td style="color:var(--sg-text-muted)">${t.email}</td>
-        <td data-col="department" style="color:var(--sg-text-muted)">${t.department}</td>
-        <td>${t.subjects.map(s => `<span class="sg-badge sg-badge-info mr-1 mb-1 inline-block">${s}</span>`).join('')}</td>
-        <td data-col="status">${teacherStatusBadge(t.status)}</td>
-        <td class="text-right">
-          <div class="inline-flex items-center gap-1">
-            <button class="sg-btn sg-btn-ghost !p-2" title="View" data-toast="Viewing profile for ${t.name} (demo only)." data-toast-type="info"><i data-lucide="eye" class="w-4 h-4"></i></button>
-            <button class="sg-btn sg-btn-ghost !p-2" title="Edit" data-toast="Edit form would open here for ${t.name} (demo only)." data-toast-type="info"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-            <button class="sg-btn sg-btn-ghost !p-2" title="Delete" data-delete-row="${t.name}" style="color:var(--sg-danger)"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-    SG.renderIcons();
-  }
-  renderTeachers();
-
-  document.getElementById('add-teacher-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const name = fd.get('name');
-    teachers.unshift({
-      id: 'T-' + String(Math.floor(1000 + Math.random() * 8999)),
-      name, email: fd.get('email'), department: fd.get('department'), subjects: [], status: fd.get('status'),
-    });
-    renderTeachers();
-    SG.closeModal('add-teacher-modal');
-    this.reset();
-    SG.toast(`${name} was added to the faculty list (demo only).`, 'success');
-  });
+  // Mock data placeholder
 </script>
 @endpush

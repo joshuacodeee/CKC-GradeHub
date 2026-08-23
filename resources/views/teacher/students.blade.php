@@ -30,22 +30,6 @@
 
 @push('scripts')
 <script>
-  const roster = [];
-  Object.entries(gradeSheets).forEach(([key, list]) => {
-    const [code, section] = key.split(/-(.+)/);
-    const subj = teacherClasses.find(c => c.subjectCode === code && c.section === section);
-    list.forEach(s => roster.push({ ...s, section, subject: subj ? subj.subject : code }));
-  });
-
-  document.querySelector('#teacher-students-table tbody').innerHTML = roster.map(s => `
-    <tr>
-      <td class="font-medium" style="color:var(--sg-text)">${s.id}</td>
-      <td style="color:var(--sg-text)">${s.name}</td>
-      <td data-col="section" style="color:var(--sg-text-muted)">${s.section}</td>
-      <td style="color:var(--sg-text-muted)">${s.subject}</td>
-      <td class="text-right"><button class="sg-btn sg-btn-ghost !p-2" data-toast="Viewing profile for ${s.name} (demo only)." data-toast-type="info"><i data-lucide="eye" class="w-4 h-4"></i></button></td>
-    </tr>
-  `).join('');
-  SG.renderIcons();
+  // Mock data placeholder
 </script>
 @endpush

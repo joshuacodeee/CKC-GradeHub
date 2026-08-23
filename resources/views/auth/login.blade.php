@@ -4,21 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Sign In · CKC GradeHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
     rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class', theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'ui-sans-serif'], display: ['Sora', 'Inter', 'ui-sans-serif'] },
-          colors: { navy: { 50: '#f3f7fc', 100: '#e7eff8', 400: '#4f89c4', 500: '#2563a3', 600: '#1d4d82', 700: '#163a63', 800: '#102a4c', 900: '#0b1a33' }, brass: { 100: '#faf1de', 500: '#c8952f', 600: '#a9761f' } }
-        }
-      }
-    };
+  <script src="{{ asset('css/tailwind.css') }}"></script>
+    <!--  -->
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="/css/custom.css">
@@ -87,22 +80,25 @@
         <h2 class="font-display text-2xl font-bold mb-1" style="color:var(--sg-text)">Welcome back</h2>
         <p class="text-sm mb-8" style="color:var(--sg-text-muted)">Sign in to access your dashboard.</p>
 
-        <form id="login-form" class="space-y-4" novalidate>
+        <form method="POST" action="{{ route('login') }}" class="space-y-4" novalidate>
+          @csrf
           <div>
-            <label for="email" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email or
-              Username</label>
+            <label for="login_id" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email or
+              Student ID</label>
             <div class="relative">
               <i data-lucide="mail" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2"
                 style="color:var(--sg-text-muted)"></i>
-              <input type="text" id="email" name="email" required autocomplete="username"
-                placeholder="you@ckcgingoog.edu.ph" class="sg-input pl-9">
+              <input type="text" id="login_id" name="login_id" required autocomplete="username"
+                value="{{ old('login_id') }}" placeholder="admin@ckcgingoog.edu.ph" class="sg-input pl-9">
             </div>
+            @error('login_id')
+              <p class="mt-2 text-xs" style="color:var(--sg-danger)">{{ $message }}</p>
+            @enderror
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label for="password" class="block text-sm font-medium" style="color:var(--sg-text)">Password</label>
-              <a href="#" class="text-xs font-medium" style="color:var(--sg-navy-500)">Forgot password?</a>
             </div>
             <div class="relative">
               <i data-lucide="lock" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2"
@@ -118,7 +114,7 @@
 
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 text-sm select-none" style="color:var(--sg-text)">
-              <input type="checkbox" class="rounded" style="accent-color: var(--sg-navy-600)"> Remember me
+              <input type="checkbox" name="remember" class="rounded" style="accent-color: var(--sg-navy-600)"> Remember me
             </label>
           </div>
 
@@ -127,34 +123,14 @@
           </button>
         </form>
 
-        <div class="my-6 flex items-center gap-3">
-          <div class="h-px flex-1" style="background:var(--sg-border)"></div>
-          <span class="text-xs" style="color:var(--sg-text-muted)">Demo Accounts</span>
-          <div class="h-px flex-1" style="background:var(--sg-border)"></div>
+        <div class="mt-6 rounded-xl border p-3 text-xs" style="border-color:var(--sg-border); background:var(--sg-surface-alt); color:var(--sg-text-muted)">
+          Default admin account: admin@ckcgingoog.edu.ph / admin123
         </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <button type="button" data-demo-login="admin@example.com"
-            class="sg-btn sg-btn-outline flex-col !py-3 text-xs gap-1">
-            <i data-lucide="shield-user" class="w-4 h-4"></i> Admin
-          </button>
-          <button type="button" data-demo-login="teacher@example.com"
-            class="sg-btn sg-btn-outline flex-col !py-3 text-xs gap-1">
-            <i data-lucide="graduation-cap" class="w-4 h-4"></i> Teacher
-          </button>
-          <button type="button" data-demo-login="student@example.com"
-            class="sg-btn sg-btn-outline flex-col !py-3 text-xs gap-1">
-            <i data-lucide="user" class="w-4 h-4"></i> Student
-          </button>
-        </div>
-        <p class="text-xs text-center mt-4" style="color:var(--sg-text-muted)">Tap a role above to autofill demo
-          credentials, then Sign In.</p>
       </div>
     </div>
   </div>
 
   <div id="toast-container"></div>
-  <script src="/js/mock-data.js"></script>
   <script src="/js/app.js"></script>
   <script>if (window.SG && SG.renderIcons) SG.renderIcons();</script>
 </body>

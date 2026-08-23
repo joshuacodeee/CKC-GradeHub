@@ -73,36 +73,4 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-  // Populate adviser dropdown from mock teachers
-  document.querySelector('#add-section-form select[name="adviser"]').innerHTML =
-    teachers.map(t => `<option>${t.name}</option>`).join('');
 
-  function renderSections() {
-    const tbody = document.querySelector('#sections-table tbody');
-    tbody.innerHTML = sections.map(s => `
-      <tr>
-        <td class="font-medium" style="color:var(--sg-text)">${s.name}</td>
-        <td data-col="course" style="color:var(--sg-text-muted)">${s.course}</td>
-        <td style="color:var(--sg-text-muted)">${s.year}</td>
-        <td style="color:var(--sg-text-muted)">${s.adviser}</td>
-        <td style="color:var(--sg-text)">${s.students}</td>
-        <td data-col="status">${s.status === 'Active' ? '<span class="sg-badge sg-badge-success">Active</span>' : '<span class="sg-badge sg-badge-warning">Inactive</span>'}</td>
-      </tr>
-    `).join('');
-  }
-  renderSections();
-
-  document.getElementById('add-section-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    const name = fd.get('name');
-    sections.unshift({ name, course: fd.get('course'), year: fd.get('year'), adviser: fd.get('adviser'), students: 0, status: 'Active' });
-    renderSections();
-    SG.closeModal('add-section-modal');
-    this.reset();
-    SG.toast(`${name} was created (demo only).`, 'success');
-  });
-</script>
-@endpush

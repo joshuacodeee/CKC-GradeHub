@@ -107,46 +107,6 @@
 
 @push('scripts')
   <script>
-    // Grade distribution bars
-    const distWrap = document.getElementById('grade-distribution-chart');
-    const maxCount = Math.max(...gradeDistribution.map(d => d.count));
-    distWrap.innerHTML = gradeDistribution.map(d => `
-            <div>
-              <div class="flex justify-between text-sm mb-1">
-                <span style="color:var(--sg-text)">${d.label}</span>
-                <span class="font-semibold" style="color:var(--sg-text)">${d.count}</span>
-              </div>
-              <div class="h-2.5 rounded-full" style="background:var(--sg-navy-50)">
-                <div class="h-2.5 rounded-full" style="width:${(d.count / maxCount) * 100}%; background:${d.color}"></div>
-              </div>
-            </div>
-          `).join('');
-
-    document.getElementById('recent-submissions-list').innerHTML = recentGradeSubmissions.map(r => `
-            <li class="flex items-start gap-3">
-              <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style="background:var(--sg-info-bg)">
-                <i data-lucide="file-check-2" class="w-4 h-4" style="color:var(--sg-navy-600)"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm" style="color:var(--sg-text)"><span class="font-semibold">${r.teacher}</span> submitted grades for <span class="font-semibold">${r.subject}</span></p>
-                <p class="text-xs" style="color:var(--sg-text-muted)">${r.section} · ${r.time}</p>
-              </div>
-            </li>
-          `).join('');
-
-    document.getElementById('recent-students-list').innerHTML = recentlyAddedStudents.map(s => `
-            <li class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:var(--sg-navy-700); color:#fff">
-                ${s.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium truncate" style="color:var(--sg-text)">${s.name}</p>
-                <p class="text-xs" style="color:var(--sg-text-muted)">${s.id} · ${s.section}</p>
-              </div>
-              <span class="text-xs flex-shrink-0" style="color:var(--sg-text-muted)">${s.time}</span>
-            </li>
-          `).join('');
-
-    SG.renderIcons();
+    // Mock data placeholder
   </script>
 @endpush

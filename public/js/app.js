@@ -326,64 +326,23 @@
     return valid;
   }
 
-  /* ---------------------------------------------------------------------
-   * Auth simulation
-   * ------------------------------------------------------------------- */
-  function initLogin() {
-    const form = document.getElementById("login-form");
-    if (!form) return;
-
-    document.querySelectorAll("[data-demo-login]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const email = btn.getAttribute("data-demo-login");
-        document.getElementById("email").value = email;
-        document.getElementById("password").value = "demo1234";
-      });
-    });
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value.trim().toLowerCase();
-      const password = document.getElementById("password").value;
-      const btn = document.getElementById("login-submit");
-
-      if (!email || !password) {
-        toast("Please enter both email and password.", "error");
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Signing in…';
-      renderIcons();
-
-      setTimeout(() => {
-        const account = demoAccounts.find((a) => a.email === email);
-        if (!account) {
-          btn.disabled = false;
-          btn.innerHTML = "Sign In";
-          toast("Account not recognized. Try one of the demo accounts below.", "error");
-          return;
-        }
-        localStorage.setItem("sg_role", account.role);
-        localStorage.setItem("sg_name", account.name);
-        localStorage.setItem("sg_email", account.email);
-        toast(`Welcome back, ${account.name.split(" ")[0]}!`, "success", 1500);
-        setTimeout(() => (window.location.href = account.redirect), 500);
-      }, 700);
-    });
-  }
-
   function initLogout() {
     document.querySelectorAll("[data-logout]").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const ok = await confirmAction("You will be signed out of the demo session.", {
+        const ok = await confirmAction("You will be signed out of the current session.", {
           title: "Log out?", confirmText: "Log Out",
         });
         if (ok) {
-          localStorage.removeItem("sg_role");
-          localStorage.removeItem("sg_name");
-          localStorage.removeItem("sg_email");
-          window.location.href = "/login";
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = "/logout";
+          const csrf = document.createElement("input");
+          csrf.type = "hidden";
+          csrf.name = "_token";
+          csrf.value = document.querySelector('meta[name="csrf-token"]')?.content || "";
+          form.appendChild(csrf);
+          document.body.appendChild(form);
+          form.submit();
         }
       });
     });
@@ -445,7 +404,6 @@
     initGradeTables();
     initTableTools();
     initPasswordToggle();
-    initLogin();
     initLogout();
     initDemoActions();
     hydrateCurrentUser();

@@ -122,62 +122,7 @@
 
 @push('scripts')
 <script>
-  function statusBadge(status) {
-    const map = { Active: 'success', Inactive: 'warning', Suspended: 'danger' };
-    return `<span class="sg-badge sg-badge-${map[status] || 'info'}">${status}</span>`;
-  }
-
-  function renderStudents() {
-    document.getElementById('students-tbody').innerHTML = students.map(s => `
-      <tr data-grade-row="false">
-        <td class="font-medium" data-col="id" style="color:var(--sg-text)">${s.id}</td>
-        <td style="color:var(--sg-text)">${s.name}</td>
-        <td data-col="course" style="color:var(--sg-text-muted)">${s.course}</td>
-        <td data-col="year" style="color:var(--sg-text-muted)">${s.year}</td>
-        <td data-col="section" style="color:var(--sg-text-muted)">${s.section}</td>
-        <td data-col="status">${statusBadge(s.status)}</td>
-        <td class="text-right">
-          <div class="inline-flex items-center gap-1">
-            <button class="sg-btn sg-btn-ghost !p-2" title="View" data-view-student="${s.id}"><i data-lucide="eye" class="w-4 h-4"></i></button>
-            <button class="sg-btn sg-btn-ghost !p-2" title="Edit" data-toast="Edit form would open here for ${s.name} (demo only)." data-toast-type="info"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-            <button class="sg-btn sg-btn-ghost !p-2" title="Delete" data-delete-row="${s.name}" style="color:var(--sg-danger)"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-    SG.renderIcons();
-
-    document.querySelectorAll('[data-view-student]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const s = students.find(x => x.id === btn.getAttribute('data-view-student'));
-        if (!s) return;
-        document.getElementById('view-student-body').innerHTML = `
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style="background:var(--sg-navy-700)">${s.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
-            <div><p class="font-semibold" style="color:var(--sg-text)">${s.name}</p><p class="text-xs" style="color:var(--sg-text-muted)">${s.id}</p></div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 pt-2">
-            <div><p class="text-xs" style="color:var(--sg-text-muted)">Course</p><p style="color:var(--sg-text)">${s.course}</p></div>
-            <div><p class="text-xs" style="color:var(--sg-text-muted)">Year Level</p><p style="color:var(--sg-text)">${s.year}</p></div>
-            <div><p class="text-xs" style="color:var(--sg-text-muted)">Section</p><p style="color:var(--sg-text)">${s.section}</p></div>
-            <div><p class="text-xs" style="color:var(--sg-text-muted)">Status</p><p>${statusBadge(s.status)}</p></div>
-            <div class="col-span-2"><p class="text-xs" style="color:var(--sg-text-muted)">Email</p><p style="color:var(--sg-text)">${s.email}</p></div>
-          </div>
-        `;
-        SG.openModal('view-student-modal');
-      });
-    });
-  }
-  renderStudents();
-
-  document.getElementById('add-student-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!window.SG) return;
-    const fd = new FormData(this);
-    const name = fd.get('name');
-    students.unshift({
-      id: '2026-' + String(Math.floor(1000 + Math.random() * 8999)),
-      name, course: fd.get('course'), year: fd.get('year'), section: fd.get('section'),
+  // Mock data placeholder
       status: fd.get('status'), email: fd.get('email'),
     });
     renderStudents();

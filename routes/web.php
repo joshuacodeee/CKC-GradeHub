@@ -1,24 +1,33 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminSubjectController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
-Route::get('/home', fn () => redirect()->route('login'))->name('home');
+Route::view('/', 'landing')->name('landing');
+Route::get('/home', fn() => redirect()->route('login'))->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
-        Route::view('/students', 'admin.students')->name('students');
-        Route::view('/teachers', 'admin.teachers')->name('teachers');
-        Route::view('/subjects', 'admin.subjects')->name('subjects');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/students', [AdminUserController::class, 'students'])->name('students');
+        Route::post('/students', [AdminUserController::class, 'storeStudent'])->name('students.store');
+        Route::get('/teachers', [AdminUserController::class, 'teachers'])->name('teachers');
+        Route::post('/teachers', [AdminUserController::class, 'storeTeacher'])->name('teachers.store');
+        Route::get('/subjects', [AdminSubjectController::class, 'index'])->name('subjects');
+        Route::post('/subjects', [AdminSubjectController::class, 'store'])->name('subjects.store');
         Route::view('/sections', 'admin.sections')->name('sections');
         Route::view('/reports', 'admin.reports')->name('reports');
         Route::view('/settings', 'admin.settings')->name('settings');

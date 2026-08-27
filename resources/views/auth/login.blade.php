@@ -11,7 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
     rel="stylesheet">
   <script src="{{ asset('css/tailwind.css') }}"></script>
-    <!--  -->
+  <!--  -->
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="/css/custom.css">
@@ -114,7 +114,8 @@
 
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 text-sm select-none" style="color:var(--sg-text)">
-              <input type="checkbox" name="remember" class="rounded" style="accent-color: var(--sg-navy-600)"> Remember me
+              <input type="checkbox" name="remember" class="rounded" style="accent-color: var(--sg-navy-600)"> Remember
+              me
             </label>
           </div>
 
@@ -123,9 +124,9 @@
           </button>
         </form>
 
-        <div class="mt-6 rounded-xl border p-3 text-xs" style="border-color:var(--sg-border); background:var(--sg-surface-alt); color:var(--sg-text-muted)">
-          Default admin account: admin@ckcgingoog.edu.ph / admin123
-        </div>
+        <p class="text-center text-sm mt-6" style="color:var(--sg-text-muted)">New student? <a
+            href="{{ route('register') }}" class="font-semibold" style="color:var(--sg-navy-600)">Create an account</a>
+        </p>
       </div>
     </div>
   </div>

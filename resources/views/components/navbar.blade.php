@@ -1,5 +1,8 @@
 @php
   $roleLabel = ['admin' => 'Administrator', 'teacher' => 'Teacher', 'student' => 'Student'][$role] ?? 'User';
+  $user = auth()->user();
+  $userName = $user?->name ?? 'Account';
+  $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
 @endphp
 <header class="sticky top-0 z-30 h-16 flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 border-b sg-surface"
   style="border-color:var(--sg-border)">
@@ -67,14 +70,14 @@
         class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-navy-50 sg-transition">
         <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
           style="background:var(--sg-navy-700)" data-current-user-initials>
-          {{ $role === 'admin' ? 'RV' : ($role === 'teacher' ? 'AR' : 'JD') }}
+          {{ $userInitials }}
         </div>
         <i data-lucide="chevron-down" class="w-4 h-4 hidden sm:block" style="color:var(--sg-text-muted)"></i>
       </button>
       <div data-dropdown-menu="user-menu" class="hidden absolute right-0 mt-2 w-56 sg-card p-2 z-40">
         <div class="px-3 py-2 border-b mb-1" style="border-color:var(--sg-border)">
           <p class="text-sm font-semibold truncate" style="color:var(--sg-text)" data-current-user-name>
-            {{ $role === 'admin' ? 'Dr. Ramon Villareal' : ($role === 'teacher' ? 'Prof. Andrea Reyes' : 'Juan Dela Cruz') }}
+            {{ $userName }}
           </p>
           <p class="text-xs" style="color:var(--sg-text-muted)">{{ $roleLabel }}</p>
         </div>

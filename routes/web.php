@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\AdminSectionController;
+use App\Http\Controllers\AdminSettingController;
+use App\Http\Controllers\AdminSubjectController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\AdminSubjectController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'landing')->name('landing');
@@ -28,27 +34,38 @@ Route::middleware('auth')->group(function () {
         Route::post('/teachers', [AdminUserController::class, 'storeTeacher'])->name('teachers.store');
         Route::get('/subjects', [AdminSubjectController::class, 'index'])->name('subjects');
         Route::post('/subjects', [AdminSubjectController::class, 'store'])->name('subjects.store');
-        Route::view('/sections', 'admin.sections')->name('sections');
-        Route::view('/reports', 'admin.reports')->name('reports');
-        Route::view('/settings', 'admin.settings')->name('settings');
-        Route::view('/profile', 'admin.profile')->name('profile');
+        Route::get('/sections', [AdminSectionController::class, 'index'])->name('sections');
+        Route::get('/sections/create', [AdminSectionController::class, 'create'])->name('sections.create');
+        Route::post('/sections', [AdminSectionController::class, 'store'])->name('sections.store');
+        Route::get('/sections/{section}/edit', [AdminSectionController::class, 'edit'])->name('sections.edit');
+        Route::put('/sections/{section}', [AdminSectionController::class, 'update'])->name('sections.update');
+        Route::delete('/sections/{section}', [AdminSectionController::class, 'destroy'])->name('sections.destroy');
+        Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
+        Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
+        Route::post('/settings/school-years', [AdminSettingController::class, 'storeSchoolYear'])->name('school-years.store');
+        Route::put('/settings/school-years/{schoolYear}/activate', [AdminSettingController::class, 'activateSchoolYear'])->name('school-years.activate');
+        Route::get('/profile', [AdminProfileController::class, 'profile'])->name('profile');
+        Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
     });
 
     Route::prefix('teacher')->name('teacher.')->group(function () {
-        Route::view('/dashboard', 'teacher.dashboard')->name('dashboard');
-        Route::view('/classes', 'teacher.classes')->name('classes');
-        Route::view('/subjects', 'teacher.subjects')->name('subjects');
-        Route::view('/students', 'teacher.students')->name('students');
-        Route::view('/grades', 'teacher.grades')->name('grades');
-        Route::view('/reports', 'teacher.reports')->name('reports');
-        Route::view('/profile', 'teacher.profile')->name('profile');
+        Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
+        Route::get('/classes', [TeacherController::class, 'classes'])->name('classes');
+        Route::get('/subjects', [TeacherController::class, 'subjects'])->name('subjects');
+        Route::get('/students', [TeacherController::class, 'students'])->name('students');
+        Route::get('/grades', [TeacherController::class, 'grades'])->name('grades');
+        Route::get('/grades/{teacherSubject}', [TeacherController::class, 'enterGrades'])->name('grades.enter');
+        Route::post('/grades/{teacherSubject}/save', [TeacherController::class, 'saveGrades'])->name('grades.save');
+        Route::get('/reports', [TeacherController::class, 'reports'])->name('reports');
+        Route::get('/profile', [TeacherController::class, 'profile'])->name('profile');
     });
 
     Route::prefix('student')->name('student.')->group(function () {
-        Route::view('/dashboard', 'student.dashboard')->name('dashboard');
-        Route::view('/grades', 'student.grades')->name('grades');
-        Route::view('/subjects', 'student.subjects')->name('subjects');
-        Route::view('/records', 'student.records')->name('records');
-        Route::view('/profile', 'student.profile')->name('profile');
+        Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/grades', [StudentController::class, 'grades'])->name('grades');
+        Route::get('/subjects', [StudentController::class, 'subjects'])->name('subjects');
+        Route::get('/records', [StudentController::class, 'records'])->name('records');
+        Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
     });
 });

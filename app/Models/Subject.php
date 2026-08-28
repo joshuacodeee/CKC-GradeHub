@@ -20,4 +20,20 @@ class Subject extends Model
             'is_active' => 'boolean',
         ];
     }
+
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
+
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class, 'teacher_subjects', 'subject_id', 'teacher_id')
+            ->where('role', 'teacher');
+    }
+
+    public function sections()
+    {
+        return $this->belongsToMany(Section::class, 'teacher_subjects', 'subject_id', 'section_id');
+    }
 }

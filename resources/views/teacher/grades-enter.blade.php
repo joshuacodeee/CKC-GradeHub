@@ -1,0 +1,151 @@
+@extends('layouts.app', ['role' => 'teacher', 'active' => 'grades', 'title' => 'Enter Grades'])
+
+@section('content')
+<div class="space-y-5">
+
+  {{-- Class info bar --}}
+  <div class="sg-card p-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h2 class="font-display font-semibold text-lg" style="color:var(--sg-text)">
+        {{ $teacherSubject->subject->code ?? '—' }} — {{ $teacherSubject->subject->name ?? 'Unnamed Subject' }}
+      </h2>
+      <p class="text-sm" style="color:var(--sg-text-muted)">
+        {{ $teacherSubject->section->name ?? '—' }} · {{ $teacherSubject->section->course ?? '' }} {{ $teacherSubject->section->year_level ?? '' }}
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="sg-badge sg-badge-warning">Weighting: 30% / 30% / 40%</span>
+      <span class="sg-badge sg-badge-info">{{ $enrollments->count() }} Students</span>
+    </div>
+  </div>
+
+  {{-- Grade entry form --}}
+  <form id="grade-entry-form" method="POST" action="{{ route('teacher.grades.save', $teacherSubject) }}" class="sg-card p-5">
+    @csrf
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-semibold" style="color:var(--sg-text)">Grade Sheet</h3>
+      <span class="text-xs" style="color:var(--sg-text-muted)">Final grade auto-calculates as you type</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="sg-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th class="text-center">Prelim</th>
+            <th class="text-center">Midterm</th>
+            <th class="text-center">Final</th>
+            <th class="text-center">Final Grade</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach ($enrollments as $enrollment)
+            @php
+              $existing = $existingGrades[$enrollment->student_id] ?? null;
+            @endphp
+            <tr data-grade-row>
+              <td style="color:var(--sg-text)">{{ $enrollment->student->student_id ?? '—' }}</td>
+              <td class="font-medium" style="color:var(--sg-text)">{{ $enrollment->student->name ?? '—' }}</td>
+              <input type="hidden" name="grades[{{ $loop->index }}][enrollment_id]" value="{{ $enrollment->id }}">
+              <input type="hidden" name="grades[{{ $loop->index }}][student_id]" value="{{ $enrollment->student_id }}">
+              <td class="text-center">
+                <input type="number" name="grades[{{ $loop->index }}][prelim]" min="0" max="100" step="0.01"
+                  value="{{ $existing->prelim ?? '' }}" class="sg-input grade-input !w-20 mx-auto !text-center" data-subject-id="{{ $teacherSubject->subject_id }}" data-enrollment-id="{{ $enrollment->id }}">
+              </td>
+              <td class="text-center">
+                <input type="number" name="grades[{{ $loop->index }}][midterm]" min="0" max="100" step="0.01"
+                  value="{{ $existing->midterm ?? '' }}" class="sg-input grade-input !w-20 mx-auto !text-center">
+              </td>
+              <td class="text-center">
+                <input type="number" name="grades[{{ $loop->index }}][final]" min="0" max="100" step="0.01"
+                  value="{{ $existing->final ?? '' }}" class="sg-input grade-input !w-20 mx-auto !text-center">
+              </td>
+              <td class="text-center font-medium" data-final-grade>—</td>
+              <td data-remarks>
+                <span class="sg-badge sg-badge-info">Pending</span>
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-end gap-2 mt-5 pt-5 border-t no-print" style="border-color:var(--sg-border)">
+      <button type="button" id="btn-print" class="sg-btn sg-btn-outline"><i data-lucide="printer" class="w-4 h-4"></i> Print</button>
+      <button type="submit" name="action" value="draft" class="sg-btn sg-btn-outline"><i data-lucide="save" class="w-4 h-4"></i> Save Draft</button>
+      <button type="submit" name="action" value="submit" class="sg-btn sg-btn-primary" data-confirm="Submit all grades for this class?" data-confirm-title="Submit Grades">
+        <i data-lucide="send" class="w-4 h-4"></i> Submit Grades
+      </button>
+    </div>
+  </form>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+  // Auto-fill final_grade and remarks cells in real-time (mirrors app.js computeFinalGrade)
+  document.addEventListener('DOMContentLoaded', function () {
+    function computeFinalGrade(prelim, midterm, final) {
+      const p = parseFloat(prelim), m = parseFloat(midterm), f = parseFloat(final);
+      if ([p, m, f].some(n => isNaN(n))) return null;
+      const grade = Math.round((p * 0.3 + m * 0.3 + f * 0.4) * 100) / 100;
+      const passed = grade >= 75;
+      return {
+        grade: grade.toFixed(2),
+        passed,
+        remarks: passed ? 'Passed' : 'Failed',
+      };
+    }
+
+    document.querySelectorAll('[data-grade-row]').forEach(function (row) {
+      const inputs = row.querySelectorAll('.grade-input');
+      const finalCell = row.querySelector('[data-final-grade]');
+      const remarksCell = row.querySelector('[data-remarks]');
+
+      function recalc() {
+        const prelim = row.querySelector('[name*="[prelim]"]').value;
+        const midterm = row.querySelector('[name*="[midterm]"]').value;
+        const final = row.querySelector('[name*="[final]"]').value;
+        const result = computeFinalGrade(prelim, midterm, final);
+        if (!result) {
+          if (finalCell) finalCell.textContent = '—';
+          if (remarksCell) remarksCell.innerHTML = '<span class="sg-badge sg-badge-info">Pending</span>';
+          return;
+        }
+        if (finalCell) finalCell.textContent = result.grade;
+        if (remarksCell) {
+          remarksCell.innerHTML = result.passed
+            ? '<span class="sg-badge sg-badge-success">Passed</span>'
+            : '<span class="sg-badge sg-badge-danger">Failed</span>';
+        }
+      }
+
+      inputs.forEach(function (input) {
+        input.addEventListener('input', recalc);
+      });
+      recalc();
+    });
+
+    // Initialize icons
+    if (window.lucide) window.lucide.createIcons();
+
+    // Print button
+    document.getElementById('btn-print')?.addEventListener('click', function () {
+      window.print();
+    });
+
+    // Confirmation for submit
+    const form = document.getElementById('grade-entry-form');
+    const submitBtn = form?.querySelector('button[value="submit"]');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function (e) {
+        if (!confirm('Submit all grades for this class? Once submitted, you cannot edit them directly.')) {
+          e.preventDefault();
+        }
+      });
+    }
+  });
+</script>
+@endpush

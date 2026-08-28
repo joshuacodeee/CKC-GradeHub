@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Console\Seeders\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,6 +14,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Accounts are created through the application flows.
+        $this->call([
+            SchoolYearSeeder::class,
+            SubjectSeeder::class,
+            SectionSeeder::class,
+            DemoUserSeeder::class,
+        ]);
     }
 }

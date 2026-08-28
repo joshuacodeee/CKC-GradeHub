@@ -2,67 +2,51 @@
 
 @section('content')
 <div class="space-y-5">
-
-  {{-- Class selector --}}
-  <div class="sg-card p-5">
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div>
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Class</label>
-        <select id="class-selector" class="sg-select"></select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">School Year</label>
-        <input type="text" value="2026–2027" class="sg-input" disabled>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Semester</label>
-        <input type="text" value="First Semester" class="sg-input" disabled>
-      </div>
-    </div>
-  </div>
-
-  {{-- Class header --}}
-  <div class="sg-card p-5 flex flex-wrap items-center justify-between gap-4">
+  <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
-      <h2 id="gh-subject" class="font-display font-semibold text-lg" style="color:var(--sg-text)">—</h2>
-      <p id="gh-section" class="text-sm" style="color:var(--sg-text-muted)">—</p>
+      <h2 class="font-display font-semibold text-lg" style="color:var(--sg-text)">Enter Grades</h2>
+      <p class="text-sm" style="color:var(--sg-text-muted)">
+        {{ $schoolYear?->semester ?? 'First Semester' }}, {{ $schoolYear?->name ?? '2026–2027' }}
+      </p>
     </div>
-    <div class="flex items-center gap-2">
-      <span id="gh-count" class="sg-badge sg-badge-info">0 Students</span>
-      <span class="sg-badge sg-badge-warning">Weighting: 30% / 30% / 40%</span>
-    </div>
+    <a href="{{ route('teacher.grades') }}" class="sg-btn sg-btn-outline !py-1.5 !text-xs">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Classes
+    </a>
   </div>
 
-  {{-- Grade entry table --}}
+  @forelse ($classes as $class)
   <div class="sg-card p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="font-display font-semibold" style="color:var(--sg-text)">Grade Sheet</h3>
-      <span class="text-xs" style="color:var(--sg-text-muted)">Final grade auto-calculates as you type</span>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="sg-table">
-        <thead>
-          <tr>
-            <th>Student ID</th><th>Student Name</th>
-            <th class="text-center">Prelim</th><th class="text-center">Midterm</th><th class="text-center">Final</th>
-            <th class="text-center">Final Grade</th><th>Remarks</th>
-          </tr>
-        </thead>
-        <tbody id="grade-sheet-tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="flex flex-wrap items-center justify-end gap-2 mt-5 pt-5 border-t no-print" style="border-color:var(--sg-border)">
-      <button id="btn-print" class="sg-btn sg-btn-outline"><i data-lucide="printer" class="w-4 h-4"></i> Print</button>
-      <button id="btn-save-draft" class="sg-btn sg-btn-outline"><i data-lucide="save" class="w-4 h-4"></i> Save Draft</button>
-      <button id="btn-submit" class="sg-btn sg-btn-primary"><i data-lucide="send" class="w-4 h-4"></i> Submit Grades</button>
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h3 class="font-display font-semibold text-lg" style="color:var(--sg-text)">
+          {{ $class->subject->code ?? '—' }} — {{ $class->subject->name ?? 'Unnamed' }}
+        </h3>
+        <p class="text-sm" style="color:var(--sg-text-muted)">
+          {{ $class->section->name ?? '—' }} · {{ $class->section->course ?? '' }} {{ $class->section->year_level ?? '' }}
+        </p>
+      </div>
+      <div class="flex gap-2">
+        @php
+          $enrollmentIds = \App\Models\Enrollment::where('section_id', $class->section_id)->pluck('id');
+          $submitted = \App\Models\Grade::where('teacher_id', auth()->id())
+              ->where('subject_id', $class->subject_id)
+              ->whereIn('enrollment_id', $enrollmentIds)
+              ->where('status', 'submitted')
+              ->count();
+          $total = $enrollmentIds->count();
+        @endphp
+        <span class="sg-badge sg-badge-info">{{ $submitted }}/{{ $total }} submitted</span>
+        <a href="{{ route('teacher.grades.enter', $class) }}" class="sg-btn sg-btn-primary !py-1.5 !text-xs">
+          <i data-lucide="square-pen" class="w-4 h-4"></i> Enter Grades
+        </a>
+      </div>
     </div>
   </div>
+  @empty
+  <div class="sg-card p-8 text-center">
+    <i data-lucide="square-pen" class="w-8 h-8 mx-auto mb-2" style="color:var(--sg-text-muted)"></i>
+    <p class="text-sm" style="color:var(--sg-text-muted)">No classes assigned to you for this semester.</p>
+  </div>
+  @endforelse
 </div>
 @endsection
-
-@push('scripts')
-<script>
-  // Mock data placeholder
-</script>
-@endpush

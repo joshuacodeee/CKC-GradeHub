@@ -19,15 +19,18 @@
           </div>
           <span class="sg-badge sg-badge-info">All Sections</span>
         </div>
-        <div class="py-10 text-center text-sm" style="color:var(--sg-text-muted)">No grade data available yet.</div>
+        <div class="py-10 text-center text-sm" style="color:var(--sg-text-muted)">
+          Grade distribution chart will be displayed once grades are recorded.
+        </div>
       </div>
 
       {{-- Student performance overview --}}
       <div class="sg-card p-5">
         <h3 class="font-display font-semibold mb-1" style="color:var(--sg-text)">Performance Overview</h3>
         <p class="text-xs mb-4" style="color:var(--sg-text-muted)">Average GWA by year level</p>
-        <div class="py-10 text-center text-sm" style="color:var(--sg-text-muted)">Performance data will appear after
-          grades are recorded.</div>
+        <div class="py-10 text-center text-sm" style="color:var(--sg-text-muted)">
+          Performance data will appear after grades are recorded.
+        </div>
       </div>
     </div>
 

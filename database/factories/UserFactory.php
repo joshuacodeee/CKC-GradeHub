@@ -24,11 +24,21 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $courses = ['BSIT', 'BSSW', 'BSCRIM', 'BSED', 'BSA', 'BSBA', 'BSN', 'BSHM'];
+        $yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        $roles = ['admin', 'teacher', 'student'];
+        $role = fake()->randomElement($roles);
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'student_id' => $role === 'student' ? Str::upper(fake()->unique()->bothify('2026-####')) : null,
+            'course' => $role === 'student' ? fake()->randomElement($courses) : null,
+            'year_level' => $role === 'student' ? fake()->randomElement($yearLevels) : null,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => $role,
+            'is_active' => true,
             'remember_token' => Str::random(10),
         ];
     }
@@ -40,6 +50,42 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+            'student_id' => null,
+            'course' => null,
+            'year_level' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a teacher.
+     */
+    public function teacher(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'teacher',
+            'student_id' => null,
+            'course' => null,
+            'year_level' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a student.
+     */
+    public function student(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'student',
         ]);
     }
 }

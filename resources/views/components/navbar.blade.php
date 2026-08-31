@@ -3,6 +3,13 @@
   $user = auth()->user();
   $userName = $user?->name ?? 'Account';
   $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
+  $navbarNotifications = $navbarNotifications ?? collect();
+  $toneStyles = [
+    'info'    => ['bg' => 'var(--sg-info-bg)',    'fg' => 'var(--sg-navy-600)'],
+    'success' => ['bg' => 'var(--sg-success-bg)', 'fg' => 'var(--sg-success)'],
+    'warning' => ['bg' => 'var(--sg-warning-bg)', 'fg' => 'var(--sg-warning)'],
+    'danger'  => ['bg' => 'var(--sg-danger-bg)',  'fg' => 'var(--sg-danger)'],
+  ];
 @endphp
 <header class="sticky top-0 z-30 h-16 flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 border-b sg-surface"
   style="border-color:var(--sg-border)">
@@ -36,31 +43,51 @@
 
     {{-- Notifications --}}
     <div class="relative">
-      <button data-dropdown-toggle="notif-menu" class="sg-btn sg-btn-ghost !p-2 relative">
+      <button data-dropdown-toggle="notif-menu" class="sg-btn sg-btn-ghost !p-2 relative"
+        aria-label="Notifications">
         <i data-lucide="bell" class="w-5 h-5"></i>
-        <span class="absolute top-1 right-1 w-2 h-2 rounded-full" style="background:var(--sg-danger)"></span>
+        @if ($navbarNotifications->count() > 0)
+          <span class="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold text-white flex items-center justify-center"
+            style="background:var(--sg-danger)">{{ $navbarNotifications->count() }}</span>
+        @endif
       </button>
       <div data-dropdown-menu="notif-menu" class="hidden absolute right-0 mt-2 w-80 sg-card p-2 z-40">
-        <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style="color:var(--sg-text-muted)">
-          Notifications</p>
-        <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style="background:var(--sg-info-bg)"><i data-lucide="file-check-2" class="w-4 h-4"
-              style="color:var(--sg-navy-600)"></i></div>
-          <div class="min-w-0">
-            <p class="text-sm" style="color:var(--sg-text)">Grades submitted for BSIT 2-A</p>
-            <p class="text-xs" style="color:var(--sg-text-muted)">5 hours ago</p>
+        <div class="flex items-center justify-between px-3 py-2">
+          <p class="text-xs font-semibold uppercase tracking-wider" style="color:var(--sg-text-muted)">
+            Notifications
+          </p>
+          <span class="text-xs" style="color:var(--sg-text-muted)">
+            {{ $navbarNotifications->count() }} {{ $navbarNotifications->count() === 1 ? 'new' : 'new' }}
+          </span>
+        </div>
+
+        @forelse ($navbarNotifications as $notif)
+          @php
+            $tone = $toneStyles[$notif['tone'] ?? 'info'] ?? $toneStyles['info'];
+            $icon = $notif['icon'] ?? 'info';
+            $title = $notif['title'] ?? '';
+            $time = $notif['time_human'] ?? '';
+          @endphp
+          <div class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style="background: {{ $tone['bg'] }}">
+              <i data-lucide="{{ $icon }}" class="w-4 h-4" style="color: {{ $tone['fg'] }}"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm" style="color:var(--sg-text)">{{ $title }}</p>
+              <p class="text-xs" style="color:var(--sg-text-muted)">{{ $time }} ago</p>
+            </div>
           </div>
-        </a>
-        <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style="background:var(--sg-success-bg)"><i data-lucide="user-plus" class="w-4 h-4"
-              style="color:var(--sg-success)"></i></div>
-          <div class="min-w-0">
-            <p class="text-sm" style="color:var(--sg-text)">New student enrolled: Faith Navarro</p>
-            <p class="text-xs" style="color:var(--sg-text-muted)">1 day ago</p>
+        @empty
+          <div class="px-3 py-8 text-center">
+            <div class="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center"
+              style="background:var(--sg-info-bg)">
+              <i data-lucide="bell-off" class="w-5 h-5" style="color:var(--sg-navy-600)"></i>
+            </div>
+            <p class="text-sm font-medium" style="color:var(--sg-text)">You're all caught up</p>
+            <p class="text-xs mt-1" style="color:var(--sg-text-muted)">No new notifications.</p>
           </div>
-        </a>
+        @endforelse
       </div>
     </div>
 

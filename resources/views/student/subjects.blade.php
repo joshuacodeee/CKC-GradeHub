@@ -15,7 +15,7 @@
       <div class="min-w-0">
         <h3 class="font-display font-semibold text-lg" style="color:var(--sg-text)">{{ $subject->code }}</h3>
         <p class="text-sm" style="color:var(--sg-text-muted)">{{ $subject->name }}</p>
-        <p class="text-xs mt-1" style="color:var(--sg-text-muted)">{{ $subject->department ?? 'General Education' }} · {{ $subject->units }} unit(s)</p>
+        <p class="text-xs mt-1" style="color:var(--sg-text-muted)">{{ $subject->units }} unit(s)</p>
       </div>
       <span class="sg-badge sg-badge-info">{{ $subject->units }} units</span>
     </div>

@@ -34,9 +34,9 @@
         @else
           <span class="sg-badge sg-badge-info">{{ $sub->status }}</span>
         @endif
-        <button class="sg-btn sg-btn-ghost !p-2" data-toast="Opening detailed report for {{ $sub->subject->code ?? '' }} — {{ $sub->section->name ?? '' }} (demo only).">
+        <a href="{{ route('teacher.grades') }}" class="sg-btn sg-btn-ghost !p-2" title="View grades">
           <i data-lucide="external-link" class="w-4 h-4"></i>
-        </button>
+        </a>
       </div>
     </div>
   </div>

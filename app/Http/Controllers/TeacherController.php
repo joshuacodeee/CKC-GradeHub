@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\SchoolYear;
-use App\Models\Enrollment;
 use App\Models\TeacherSubject;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class TeacherController extends Controller
 {
@@ -22,26 +24,19 @@ class TeacherController extends Controller
     }
 
     /**
-     * Grade-weighting configuration — kept in sync with
-     * computeFinalGrade() in public/js/app.js.
+     * Spec §30: Final Grade = (Prelim + Midterm + Final) / 3.
+     * Returns null if all three are null so views can show a dash.
      */
-    protected function gradeWeights(): array
-    {
-        return ['prelim' => 0.30, 'midterm' => 0.30, 'final' => 0.40];
-    }
-
     protected function computeFinalGrade(?float $prelim, ?float $midterm, ?float $final): ?float
     {
         if ($prelim === null && $midterm === null && $final === null) {
             return null;
         }
-        $w = $this->gradeWeights();
-        return round(
-            ($prelim * $w['prelim'] ?? 0) +
-            ($midterm * $w['midterm'] ?? 0) +
-            ($final * $w['final'] ?? 0),
-            2
-        );
+        $values = array_filter([$prelim, $midterm, $final], fn ($v) => $v !== null);
+        if (empty($values)) {
+            return null;
+        }
+        return round(array_sum($values) / count($values), 2);
     }
 
     public function dashboard()
@@ -51,14 +46,17 @@ class TeacherController extends Controller
 
         $assignedClasses = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with(['subject', 'section'])
+            ->where('status', 'active')
+            ->with(['subject', 'section', 'schoolYear'])
             ->get();
 
-        $totalStudents = $assignedClasses->sum(fn ($c) => $c->section?->studentCount() ?? 0);
+        $totalStudents = $assignedClasses->sum(
+            fn ($c) => $c->section?->studentCount() ?? 0
+        );
 
-        $pendingGrades = Grade::whereIn('subject_id', $assignedClasses->pluck('subject_id'))
+        $assignmentIds = $assignedClasses->pluck('id');
+        $pendingGrades = Grade::whereIn('teacher_assignment_id', $assignmentIds)
             ->where('status', 'draft')
-            ->when($schoolYear, fn ($q) => $q->whereHas('enrollment', fn ($q) => $q->where('school_year_id', $schoolYear->id)))
             ->count();
 
         return view('teacher.dashboard', [
@@ -76,7 +74,8 @@ class TeacherController extends Controller
 
         $classes = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with(['subject', 'section'])
+            ->where('status', 'active')
+            ->with(['subject', 'section', 'schoolYear'])
             ->get();
 
         return view('teacher.classes', [
@@ -90,23 +89,44 @@ class TeacherController extends Controller
         $user = Auth::user();
         $schoolYear = $this->currentSchoolYear();
 
-        $subjects = $user->teacherAssignments()
+        $assignments = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with('subject')
-            ->get()
+            ->where('status', 'active')
+            ->with(['subject', 'section'])
+            ->get();
+
+        $subjects = $assignments
             ->groupBy('subject_id')
             ->map(fn ($group) => $group->first()->subject)
             ->values();
 
-        $subjectDetails = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with('subject', 'section')
-            ->get()
-            ->groupBy('subject_id');
+        $subjectDetails = $assignments->groupBy('subject_id');
 
         return view('teacher.subjects', [
             'subjects' => $subjects,
             'subjectDetails' => $subjectDetails,
+            'schoolYear' => $schoolYear,
+        ]);
+    }
+
+    /**
+     * Spec §35 / §42: "My Sections" — sections assigned to the logged-in
+     * teacher in the current school year, grouped by subject.
+     */
+    public function sections()
+    {
+        $user = Auth::user();
+        $schoolYear = $this->currentSchoolYear();
+
+        $assignments = $user->teacherAssignments()
+            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('status', 'active')
+            ->with(['subject', 'section', 'schoolYear'])
+            ->get()
+            ->groupBy('subject_id');
+
+        return view('teacher.sections', [
+            'groupedAssignments' => $assignments,
             'schoolYear' => $schoolYear,
         ]);
     }
@@ -118,10 +138,12 @@ class TeacherController extends Controller
 
         $assignments = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('status', 'active')
             ->with(['section', 'subject'])
             ->get();
 
-        $students = $assignments->map(fn ($a) => $a->section)
+        $students = $assignments
+            ->map(fn ($a) => $a->section)
             ->filter()
             ->map(fn ($s) => $s->students)
             ->flatten()
@@ -135,6 +157,27 @@ class TeacherController extends Controller
         ]);
     }
 
+    public function storeStudent(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'student_id' => ['required', 'string', 'max:255', 'unique:users,student_id'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'student_id' => $validated['student_id'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'student',
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('teacher.students')->with('success', 'Student account created successfully.');
+    }
+
     /**
      * Show the grade-entry index — list of classes the teacher can enter grades for.
      */
@@ -145,17 +188,17 @@ class TeacherController extends Controller
 
         $classes = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
 
-        // Compute how many students still have no submitted grades per class
         foreach ($classes as $class) {
             $enrollmentIds = Enrollment::where('section_id', $class->section_id)
+                ->where('status', 'enrolled')
                 ->pluck('id');
 
             $class->total_students = $enrollmentIds->count();
-            $class->grades_submitted = Grade::whereIn('enrollment_id', $enrollmentIds)
-                ->where('subject_id', $class->subject_id)
+            $class->grades_submitted = Grade::where('teacher_assignment_id', $class->id)
                 ->where('status', 'submitted')
                 ->count();
             $class->pending_submissions = $class->total_students - $class->grades_submitted;
@@ -168,13 +211,13 @@ class TeacherController extends Controller
     }
 
     /**
-     * Show the grade entry form for a specific class + subject.
+     * Show the grade entry form for a specific assignment.
      */
     public function enterGrades(Request $request, TeacherSubject $teacherSubject)
     {
         $user = Auth::user();
 
-        // Ensure the teacher actually owns this assignment
+        // Spec §40: a teacher must never access another teacher's assignment.
         abort_unless($teacherSubject->teacher_id === $user->id, 403);
 
         $schoolYear = $this->currentSchoolYear();
@@ -187,12 +230,11 @@ class TeacherController extends Controller
             ->with('student')
             ->get();
 
-        // Existing grades keyed by student_id
-        $existingGrades = Grade::where('teacher_id', $user->id)
-            ->where('subject_id', $teacherSubject->subject_id)
-            ->whereIn('enrollment_id', $enrollments->pluck('id'))
+        // Existing grades keyed by student_id (user id).
+        $existingGrades = Grade::where('teacher_assignment_id', $teacherSubject->id)
+            ->whereIn('student_id', $enrollments->pluck('student_id'))
             ->get()
-            ->keyBy(fn ($g) => $g->enrollment->student_id);
+            ->keyBy('student_id');
 
         return view('teacher.grades-enter', [
             'teacherSubject' => $teacherSubject,
@@ -203,14 +245,14 @@ class TeacherController extends Controller
     }
 
     /**
-     * Save grades as draft.
+     * Save grades as draft, or submit them if the submit action was used.
      */
     public function saveGrades(Request $request, TeacherSubject $teacherSubject)
     {
         $user = Auth::user();
         abort_unless($teacherSubject->teacher_id === $user->id, 403);
 
-        $grades = $request->validate([
+        $payload = $request->validate([
             'grades' => ['required', 'array'],
             'grades.*.enrollment_id' => ['required', 'exists:enrollments,id'],
             'grades.*.student_id' => ['required', 'exists:users,id'],
@@ -220,12 +262,12 @@ class TeacherController extends Controller
         ])['grades'];
 
         $isSubmit = $request->has('action') && $request->input('action') === 'submit';
+        $submittedAt = $isSubmit ? now() : null;
 
-        foreach ($grades as $gradeData) {
-            $prelim = $gradeData['prelim'] ?? null;
-            $midterm = $gradeData['midterm'] ?? null;
-            $final = $gradeData['final'] ?? null;
-
+        foreach ($payload as $row) {
+            $prelim = $row['prelim'] ?? null;
+            $midterm = $row['midterm'] ?? null;
+            $final = $row['final'] ?? null;
             $finalGrade = $this->computeFinalGrade($prelim, $midterm, $final);
             $remarks = $finalGrade !== null
                 ? ($finalGrade >= 75 ? 'Passed' : 'Failed')
@@ -233,17 +275,20 @@ class TeacherController extends Controller
 
             Grade::updateOrCreate(
                 [
-                    'enrollment_id' => $gradeData['enrollment_id'],
-                    'subject_id' => $teacherSubject->subject_id,
-                    'teacher_id' => $user->id,
+                    'teacher_assignment_id' => $teacherSubject->id,
+                    'student_id' => $row['student_id'],
                 ],
                 [
+                    'enrollment_id' => $row['enrollment_id'],
+                    'subject_id' => $teacherSubject->subject_id,
+                    'teacher_id' => $user->id,
                     'prelim' => $prelim,
                     'midterm' => $midterm,
                     'final' => $final,
                     'final_grade' => $finalGrade,
                     'remarks' => $remarks,
                     'status' => $isSubmit ? 'submitted' : 'draft',
+                    'submitted_at' => $submittedAt,
                 ]
             );
         }
@@ -261,15 +306,16 @@ class TeacherController extends Controller
 
         $submissions = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
 
         foreach ($submissions as $sub) {
-            $enrollmentIds = Enrollment::where('section_id', $sub->section_id)->pluck('id');
-            $grades = Grade::where('teacher_id', $user->id)
-                ->where('subject_id', $sub->subject_id)
-                ->whereIn('enrollment_id', $enrollmentIds)
-                ->get();
+            $enrollmentIds = Enrollment::where('section_id', $sub->section_id)
+                ->where('status', 'enrolled')
+                ->pluck('id');
+
+            $grades = Grade::where('teacher_assignment_id', $sub->id)->get();
 
             $sub->total_students = $enrollmentIds->count();
             $sub->submitted_count = $grades->where('status', 'submitted')->count();
@@ -292,6 +338,7 @@ class TeacherController extends Controller
 
         $assignments = $user->teacherAssignments()
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
 
@@ -303,5 +350,23 @@ class TeacherController extends Controller
             'subjects' => $subjects,
             'schoolYear' => $schoolYear,
         ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required', 'email', 'max:255',
+                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'phone' => ['nullable', 'string', 'max:32'],
+        ]);
+
+        $user->update($validated);
+
+        return back()->with('success', 'Profile updated successfully.');
     }
 }

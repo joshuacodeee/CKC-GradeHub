@@ -3,15 +3,14 @@
 @php
   $user = $user ?? auth()->user();
   $userName = $user?->name ?? 'Account';
-  $userEmail = $user?->email ?? 'student@example.com';
-  $studentID = $user?->student_id ?? 'CYR-NUM';
-  $userContactNumber = $user?->phone ?? '—';
+  $userEmail = $user?->email ?? '';
+  $studentID = $user?->student_id ?? '';
   $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
   $course = $user?->course ?? '—';
-  $yearLevel = $user?->year_level ?? '1st Year';
+  $yearLevel = $user?->year_level ?? '—';
+  $block = $user?->block ?: '—';
   $sectionName = $section?->name ?? '—';
   $gwaDisplay = $gwa !== null ? $gwa : '—';
-  $studentIdBadge = $studentID;
 @endphp
 
 @section('content')
@@ -22,39 +21,48 @@
       <h3 class="font-display font-semibold text-lg mt-4" style="color:var(--sg-text)" data-current-user-name>
         {{ $userName }}
       </h3>
-      <p class="text-sm" style="color:var(--sg-text-muted)">{{ $studentIdBadge }} · {{ $course }} {{ $yearLevel }}</p>
+      <p class="text-sm" style="color:var(--sg-text-muted)">{{ $studentID }} · {{ $course }} {{ $yearLevel }}{{ $block !== '—' ? ' · Block ' . $block : '' }}</p>
       <span class="sg-badge sg-badge-success mt-3 inline-flex">Active</span>
       <div class="mt-5 pt-5 border-t space-y-2 text-left text-sm" style="border-color:var(--sg-border)">
         <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="mail" class="w-4 h-4"></i>
           {{ $userEmail }}
         </p>
         <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="phone" class="w-4 h-4"></i>
-          {{ $userContactNumber }}</p>
-        <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="map-pin"
-            class="w-4 h-4"></i> Imus, Cavite, Philippines</p>
+          {{ $user?->phone ?: 'No phone on file' }}</p>
       </div>
     </div>
 
     <div class="lg:col-span-2 space-y-6">
       <div class="sg-card p-6 space-y-4">
         <h3 class="font-display font-semibold" style="color:var(--sg-text)">Personal Information</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label><input
-              type="text" value="{{ $userName }}" class="sg-input"></div>
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label><input
-              type="text" value="{{ $studentID }}" class="sg-input" disabled></div>
-          <div class="col-span-2"><label class="block text-sm font-medium mb-1.5"
-              style="color:var(--sg-text)">Email</label><input type="email" value="{{ $userEmail }}" class="sg-input">
+        <form method="POST" action="{{ route('student.profile.update') }}" class="space-y-4">
+          @csrf
+          @method('PUT')
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
+              <input type="text" name="name" value="{{ old('name', $userName) }}" required class="sg-input">
+              @error('name') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>
+              <input type="text" value="{{ $studentID }}" class="sg-input" disabled>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
+              <input type="email" name="email" value="{{ old('email', $userEmail) }}" required class="sg-input">
+              @error('email') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Phone</label>
+              <input type="text" name="phone" value="{{ old('phone', $user?->phone) }}" placeholder="e.g. 0917-555-0100" class="sg-input">
+              @error('phone') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+            </div>
           </div>
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Contact Number</label><input
-              type="text" value="{{ $userContactNumber }}" class="sg-input"></div>
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Address</label><input
-              type="text" value="Imus, Cavite, Philippines" class="sg-input"></div>
-        </div>
-        <div class="pt-2 flex justify-end">
-          <button class="sg-btn sg-btn-primary" data-toast="Profile updated successfully."><i data-lucide="check"
-              class="w-4 h-4"></i> Save Changes</button>
-        </div>
+          <div class="pt-2 flex justify-end">
+            <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save Changes</button>
+          </div>
+        </form>
       </div>
 
       <div class="sg-card p-6 space-y-3">
@@ -67,6 +75,10 @@
           <div>
             <p style="color:var(--sg-text-muted)">Year Level</p>
             <p class="font-medium" style="color:var(--sg-text)">{{ $yearLevel }}</p>
+          </div>
+          <div>
+            <p style="color:var(--sg-text-muted)">Block</p>
+            <p class="font-medium" style="color:var(--sg-text)">{{ $block }}</p>
           </div>
           <div>
             <p style="color:var(--sg-text-muted)">Section</p>

@@ -10,7 +10,7 @@
     <div class="sg-card p-5">
       @include('components.table', [
         'tableId' => 'teachers-table',
-        'searchPlaceholder' => 'Search by name, ID, or department…',
+        'searchPlaceholder' => 'Search by name, ID, or email…',
         'filterColumn' => 'status',
         'filterOptions' => ['Active', 'On Leave'],
         'addLabel' => 'Add Teacher',
@@ -25,10 +25,7 @@
               <th class="cursor-pointer" data-sort-column>Teacher ID</th>
               <th class="cursor-pointer" data-sort-column>Name</th>
               <th class="cursor-pointer" data-sort-column>Email</th>
-              <th class="cursor-pointer" data-sort-column>Department</th>
-              <th>Assigned Subjects</th>
               <th class="cursor-pointer" data-sort-column>Status</th>
-              <th class="text-right">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -37,15 +34,13 @@
                 <td style="color:var(--sg-text)">{{ $teacher->id }}</td>
                 <td class="font-medium" style="color:var(--sg-text)">{{ $teacher->name }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $teacher->email }}</td>
-                <td style="color:var(--sg-text-muted)">—</td>
-                <td style="color:var(--sg-text-muted)">—</td>
-                <td class="text-right"><span
+                <td><span
                     class="sg-badge {{ $teacher->is_active ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $teacher->is_active ? 'Active' : 'Inactive' }}</span>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="6" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher accounts have been
+                <td colspan="4" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher accounts have been
                   created yet.</td>
               </tr>
             @endforelse
@@ -75,12 +70,12 @@
       <form id="add-teacher-form" method="POST" action="{{ route('admin.teachers.store') }}"
         class="p-6 overflow-y-auto space-y-4">
         @csrf
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
+        <div class="space-y-4">
+          <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
             <input type="text" name="name" required placeholder="e.g. Prof. Andrea Reyes" class="sg-input">
           </div>
-          <div class="col-span-2">
+          <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email Address</label>
             <input type="email" name="email" required placeholder="name@nbit.edu.ph" class="sg-input">
           </div>
@@ -92,26 +87,10 @@
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm Password</label>
             <input type="password" name="password_confirmation" required minlength="8" class="sg-input">
           </div>
-          <div class="col-span-2">
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Department</label>
-            <select name="department" class="sg-select" required>
-              <option>College of Computer Studies</option>
-              <option>General Education</option>
-              <option>College of Business</option>
-            </select>
-          </div>
-          <div class="col-span-2">
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Status</label>
-            <select name="status" class="sg-select">
-              <option>Active</option>
-              <option>On Leave</option>
-            </select>
-          </div>
         </div>
-        <div class="flex justify-end gap-2 pt-2">
+        <div class="flex justify-end gap-2 pt-4 border-t" style="border-color:var(--sg-border)">
           <button type="button" data-modal-close="add-teacher-modal" class="sg-btn sg-btn-outline">Cancel</button>
-          <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save
-            Teacher</button>
+          <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Save Teacher</button>
         </div>
       </form>
     </div>

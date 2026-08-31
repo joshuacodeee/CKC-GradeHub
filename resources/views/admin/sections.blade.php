@@ -17,7 +17,7 @@
   <div class="sg-card p-5">
     @include('components.table', [
       'tableId' => 'sections-table',
-      'searchPlaceholder' => 'Search by section name, course, or adviser…',
+      'searchPlaceholder' => 'Search by section name, course, or year…',
       'filterColumn' => 'status',
       'filterOptions' => ['Active', 'Inactive'],
     ])
@@ -29,7 +29,7 @@
             <th class="cursor-pointer" data-sort-column>Section Name</th>
             <th class="cursor-pointer" data-sort-column>Course</th>
             <th class="cursor-pointer" data-sort-column>Year Level</th>
-            <th class="cursor-pointer" data-sort-column>Adviser</th>
+            <th class="cursor-pointer" data-sort-column>Block</th>
             <th class="cursor-pointer" data-sort-column># Students</th>
             <th class="cursor-pointer" data-sort-column>Status</th>
             <th class="text-right no-print">Actions</th>
@@ -43,7 +43,7 @@
               </td>
               <td style="color:var(--sg-text-muted)">{{ $section->course }}</td>
               <td style="color:var(--sg-text-muted)">{{ $section->year_level }}</td>
-              <td style="color:var(--sg-text-muted)">{{ $section->adviser?->name ?? '—' }}</td>
+              <td style="color:var(--sg-text-muted)">{{ $section->block ?: '—' }}</td>
               <td style="color:var(--sg-text-muted)">{{ $section->enrollments_count }}</td>
               <td>
                 <span data-col="status">
@@ -56,6 +56,15 @@
               </td>
               <td class="text-right no-print">
                 <div class="flex justify-end gap-1">
+                  <form method="POST" action="{{ route('admin.sections.sync', $section) }}"
+                    data-confirm="Re-sync enrollments for {{ $section->name }}? Existing enrollments are kept; only missing students are added."
+                    data-confirm-title="Sync Section">
+                    @csrf
+                    <button type="submit" class="sg-btn sg-btn-ghost !p-2" title="Sync enrollments"
+                      style="color:var(--sg-navy-600)">
+                      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
+                  </form>
                   <a href="{{ route('admin.sections.edit', $section) }}"
                     class="sg-btn sg-btn-ghost !p-2" title="Edit">
                     <i data-lucide="pencil" class="w-4 h-4"></i>

@@ -103,6 +103,30 @@
       @include('components.navbar', ['title' => $title ?? 'Dashboard', 'role' => $role ?? 'admin'])
 
       <main class="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        @if (session('success'))
+          <div data-flash data-flash-type="success" class="sg-card p-4 mb-4 flex items-start gap-3 border"
+            style="background:var(--sg-success-bg); border-color:var(--sg-success) !important;">
+            <i data-lucide="circle-check" class="w-5 h-5 flex-shrink-0 mt-0.5" style="color:var(--sg-success)"></i>
+            <p class="text-sm font-medium" style="color:var(--sg-text)">{{ session('success') }}</p>
+            <button type="button" data-flash-close class="ml-auto sg-btn sg-btn-ghost !p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+        @endif
+        @if (session('error'))
+          <div data-flash data-flash-type="error" class="sg-card p-4 mb-4 flex items-start gap-3 border"
+            style="background:var(--sg-danger-bg); border-color:var(--sg-danger) !important;">
+            <i data-lucide="circle-x" class="w-5 h-5 flex-shrink-0 mt-0.5" style="color:var(--sg-danger)"></i>
+            <p class="text-sm font-medium" style="color:var(--sg-text)">{{ session('error') }}</p>
+            <button type="button" data-flash-close class="ml-auto sg-btn sg-btn-ghost !p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+        @endif
+        @if (session('info'))
+          <div data-flash data-flash-type="info" class="sg-card p-4 mb-4 flex items-start gap-3 border"
+            style="background:var(--sg-info-bg); border-color:var(--sg-navy-600) !important;">
+            <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5" style="color:var(--sg-navy-600)"></i>
+            <p class="text-sm font-medium" style="color:var(--sg-text)">{{ session('info') }}</p>
+            <button type="button" data-flash-close class="ml-auto sg-btn sg-btn-ghost !p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+        @endif
         @yield('content')
       </main>
     </div>

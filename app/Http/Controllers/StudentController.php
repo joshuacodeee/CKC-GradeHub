@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\SchoolYear;
-use App\Models\Enrollment;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,26 +44,44 @@ class StudentController extends Controller
         $user = Auth::user();
         $schoolYear = $this->currentSchoolYear();
 
+        // Auto-enroll the student into a matching section if they aren't
+        // enrolled yet. Idempotent — runs every page load so existing
+        // students get linked as soon as a section is created.
+        $this->ensureEnrollment($user, $schoolYear);
+
         $enrollments = Enrollment::where('student_id', $user->id)
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with(['section'])
+            ->where('status', 'enrolled')
+            ->with('section')
             ->get();
 
-        $section = $enrollments->first()->section ?? null;
+        $section = $enrollments->first()?->section;
 
-        $subjectIds = Grade::whereIn('enrollment_id', $enrollments->pluck('id'))
-            ->when($schoolYear, fn ($q) => $q->whereHas('enrollment', fn ($q) => $q->where('school_year_id', $schoolYear->id)))
-            ->pluck('subject_id')
-            ->unique();
+        // All subjects the student should see this term: those that have
+        // a teacher assignment in the student's section (regardless of
+        // whether a grade has been encoded yet). If no school-year-scoped
+        // assignments exist for the section, fall back to any active
+        // assignment for that section — useful when the section was created
+        // without a school year.
+        $teacherSubjectQuery = \App\Models\TeacherSubject::where('section_id', optional($section)->id)
+            ->where('status', 'active');
+        if ($schoolYear) {
+            $teacherSubjectQuery->where(function ($q) use ($schoolYear) {
+                $q->where('school_year_id', $schoolYear->id)
+                    ->orWhereNull('school_year_id');
+            });
+        }
 
-        $grades = Grade::where('teacher_id', '!=', null)
-            ->whereIn('subject_id', $subjectIds)
-            ->whereIn('enrollment_id', $enrollments->pluck('id'))
-            ->with('subject')
-            ->get();
+        $subjectIds = $teacherSubjectQuery->pluck('subject_id')->unique();
 
         $enrolledSubjects = Subject::whereIn('id', $subjectIds)->get();
         $totalUnits = $enrolledSubjects->sum('units');
+
+        $grades = Grade::where('student_id', $user->id)
+            ->whereIn('teacher_assignment_id', \App\Models\TeacherSubject::whereIn('subject_id', $subjectIds)->pluck('id'))
+            ->with(['teacherAssignment.subject', 'subject'])
+            ->get();
+
         $gwa = $this->computeGwa($grades);
 
         return view('student.dashboard', [
@@ -77,6 +95,51 @@ class StudentController extends Controller
         ]);
     }
 
+    /**
+     * If the student is not currently enrolled, find a section matching
+     * their course / year_level / block in the current school year and
+     * create an enrollment. Skips silently if no section matches. Block
+     * matching is exact: a student with block "B" only matches a section
+     * with block "B".
+     */
+    protected function ensureEnrollment($user, $schoolYear): void
+    {
+        $alreadyEnrolled = Enrollment::where('student_id', $user->id)
+            ->where('status', 'enrolled')
+            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->exists();
+
+        if ($alreadyEnrolled) {
+            return;
+        }
+
+        $studentBlock = $user->block ?: null;
+
+        $section = \App\Models\Section::query()
+            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->where('course', $user->course)
+            ->where('year_level', $user->year_level)
+            ->when($studentBlock === null, function ($q) {
+                $q->where(function ($q) {
+                    $q->whereNull('block')->orWhere('block', '');
+                });
+            })
+            ->when($studentBlock !== null, fn ($q) => $q->where('block', $studentBlock))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $section) {
+            return;
+        }
+
+        Enrollment::create([
+            'student_id' => $user->id,
+            'section_id' => $section->id,
+            'school_year_id' => $schoolYear?->id,
+            'status' => 'enrolled',
+        ]);
+    }
+
     public function grades()
     {
         $user = Auth::user();
@@ -86,9 +149,9 @@ class StudentController extends Controller
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
             ->get();
 
-        $gradeRecords = Grade::whereIn('enrollment_id', $enrollments->pluck('id'))
+        $gradeRecords = Grade::where('student_id', $user->id)
             ->where('status', 'submitted')
-            ->with('subject')
+            ->with(['teacherAssignment.subject', 'subject'])
             ->get();
 
         $gwa = $this->computeGwa($gradeRecords);
@@ -106,12 +169,24 @@ class StudentController extends Controller
         $user = Auth::user();
         $schoolYear = $this->currentSchoolYear();
 
+        $this->ensureEnrollment($user, $schoolYear);
+
         $enrollments = Enrollment::where('student_id', $user->id)
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->with('section.subjects')
             ->get();
 
-        $subjectIds = $enrollments->flatMap(fn ($e) => $e->section->subjects->pluck('id'))->unique();
+        $sectionIds = $enrollments->pluck('section_id');
+
+        $subjectIds = \App\Models\TeacherSubject::whereIn('section_id', $sectionIds)
+            ->when($schoolYear, function ($q) use ($schoolYear) {
+                $q->where(function ($q) use ($schoolYear) {
+                    $q->where('school_year_id', $schoolYear->id)
+                        ->orWhereNull('school_year_id');
+                });
+            })
+            ->where('status', 'active')
+            ->pluck('subject_id')
+            ->unique();
 
         $subjects = Subject::whereIn('id', $subjectIds)->get();
         $totalUnits = $subjects->sum('units');
@@ -127,30 +202,29 @@ class StudentController extends Controller
     {
         $user = Auth::user();
 
-        // All completed semesters (enrollments with submitted grades)
         $enrollments = Enrollment::where('student_id', $user->id)
             ->whereHas('grades', fn ($q) => $q->where('status', 'submitted'))
             ->with(['section', 'schoolYear'])
             ->get();
 
-        // Group by school year for term-based display
         $terms = $enrollments->groupBy(function ($e) {
             return $e->schoolYear ? $e->schoolYear->name . ' — ' . $e->schoolYear->semester : 'Unknown';
         });
 
         $recordData = [];
         foreach ($terms as $termName => $termEnrollments) {
-            $subjectIds = $termEnrollments->flatMap(fn ($e) => Grade::where('enrollment_id', $e->id)->pluck('subject_id'))->unique();
-            $grades = Grade::whereIn('enrollment_id', $termEnrollments->pluck('id'))
+            $grades = Grade::where('student_id', $user->id)
                 ->where('status', 'submitted')
-                ->with('subject')
+                ->whereIn('teacher_assignment_id',
+                    \App\Models\TeacherSubject::whereIn('section_id', $termEnrollments->pluck('section_id'))->pluck('id'))
+                ->with(['teacherAssignment.subject', 'subject'])
                 ->get();
 
             $recordData[] = [
                 'term' => $termName,
                 'grades' => $grades,
                 'gwa' => $this->computeGwa($grades),
-                'totalUnits' => $grades->sum('subject.units'),
+                'totalUnits' => $grades->sum(fn ($g) => $g->subject?->units ?? 0),
             ];
         }
 
@@ -172,15 +246,14 @@ class StudentController extends Controller
 
         $section = $enrollment?->section;
 
-        $subjectIds = Grade::whereIn('enrollment_id', Enrollment::where('student_id', $user->id)->pluck('id'))
-            ->pluck('subject_id')
-            ->unique();
+        $assignmentIds = \App\Models\TeacherSubject::where('section_id', optional($section)->id)
+            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->pluck('id');
 
-        $grades = Grade::where('teacher_id', '!=', null)
-            ->whereIn('subject_id', $subjectIds)
-            ->whereHas('enrollment', fn ($q) => $q->where('student_id', $user->id))
+        $grades = Grade::where('student_id', $user->id)
+            ->whereIn('teacher_assignment_id', $assignmentIds)
             ->where('status', 'submitted')
-            ->with('subject')
+            ->with(['teacherAssignment.subject', 'subject'])
             ->get();
 
         $gwa = $this->computeGwa($grades);
@@ -191,5 +264,23 @@ class StudentController extends Controller
             'schoolYear' => $schoolYear,
             'gwa' => $gwa,
         ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required', 'email', 'max:255',
+                \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'phone' => ['nullable', 'string', 'max:32'],
+        ]);
+
+        $user->update($validated);
+
+        return back()->with('success', 'Profile updated successfully.');
     }
 }

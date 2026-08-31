@@ -21,7 +21,7 @@
       <div>
         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Course</label>
         <select name="course" class="sg-select" required>
-          @foreach (['BSIT', 'BSSW', 'BSCRIM', 'BSED', 'BSA', 'BSBA', 'BSN', 'BSHM'] as $course)
+          @foreach (['BS Elementary Education','BS Secondary Education','BS Business Administration','BS Accountancy','BS Information Technology','BS Social Work','BS Hospitality Management','BS Nursing','BS Criminology'] as $course)
             <option value="{{ $course }}" {{ old('course', $section->course) === $course ? 'selected' : '' }}>{{ $course }}</option>
           @endforeach
         </select>
@@ -36,23 +36,16 @@
         </select>
       </div>
       <div>
+        <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Block <span class="text-xs" style="color:var(--sg-text-muted)">(optional)</span></label>
+        <input type="text" name="block" placeholder="e.g. A, B, C" value="{{ old('block', $section->block) }}" class="sg-input" maxlength="50">
+      </div>
+      <div>
         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">School Year</label>
         <select name="school_year_id" class="sg-select">
           <option value="">Select school year…</option>
           @foreach ($schoolYears as $sy)
             <option value="{{ $sy->id }}" {{ old('school_year_id', $section->school_year_id) == $sy->id ? 'selected' : '' }}>
               {{ $sy->name }} — {{ $sy->semester }}
-            </option>
-          @endforeach
-        </select>
-      </div>
-      <div class="sm:col-span-2">
-        <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Adviser</label>
-        <select name="adviser_id" class="sg-select">
-          <option value="">Select an adviser…</option>
-          @foreach ($advisers as $adviser)
-            <option value="{{ $adviser->id }}" {{ old('adviser_id', $section->adviser_id) == $adviser->id ? 'selected' : '' }}>
-              {{ $adviser->name }}
             </option>
           @endforeach
         </select>

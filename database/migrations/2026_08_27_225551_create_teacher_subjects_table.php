@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('school_year_id')->nullable()->constrained('school_years')->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['teacher_id', 'subject_id', 'section_id', 'school_year_id']);
+            $table->unique(['teacher_id', 'subject_id', 'section_id', 'school_year_id'], 'ts_teacher_subject_section_sy_unique');
         });
     }
 

@@ -10,6 +10,7 @@ class Section extends Model
         'name',
         'course',
         'year_level',
+        'block',
         'adviser_id',
         'school_year_id',
         'is_active',
@@ -69,5 +70,11 @@ class Section extends Model
     public function studentCount()
     {
         return $this->enrollments()->where('status', 'enrolled')->count();
+    }
+
+    /** Display string with block when set, e.g. "BS Information Technology 1-A — Block B". */
+    public function displayName(): string
+    {
+        return $this->name . ($this->block ? ' — Block ' . $this->block : '');
     }
 }

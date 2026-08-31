@@ -19,9 +19,7 @@
         {{ $user->email }}
       </p>
       <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="phone" class="w-4 h-4"></i>
-        {{ $user->phone ?? '0917-555-0100' }}</p>
-      <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="building-2" class="w-4 h-4"></i>
-        Registrar's Office</p>
+        {{ $user->phone ?: 'No phone on file' }}</p>
     </div>
   </div>
 
@@ -31,20 +29,28 @@
       @csrf
       @method('PUT')
       <div class="grid grid-cols-2 gap-4">
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label><input
-              type="text" name="name" value="{{ old('name', $user->name) }}" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Title</label><input
-              type="text" value="Dr." class="sg-input"></div>
-        <div class="col-span-2"><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
-          <input type="email" name="email" value="{{ old('email', $user->email) }}" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Phone</label><input
-              type="text" value="{{ $user->phone ?? '' }}" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Department</label><input
-              type="text" value="Registrar's Office" class="sg-input"></div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
+          <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="sg-input">
+          @error('name') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Role</label>
+          <input type="text" value="System Administrator" class="sg-input" disabled>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
+          <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="sg-input">
+          @error('email') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Phone</label>
+          <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="e.g. 0917-555-0100" class="sg-input">
+          @error('phone') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+        </div>
       </div>
       <div class="flex justify-end">
-        <button type="submit" class="sg-btn sg-btn-primary" data-toast="Profile updated successfully."><i data-lucide="check"
-            class="w-4 h-4"></i> Save Changes</button>
+        <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save Changes</button>
       </div>
     </form>
 
@@ -54,12 +60,12 @@
         @csrf
         @method('PUT')
         <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2"><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Current Password</label><input type="password" name="current_password" class="sg-input" placeholder="••••••••"></div>
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">New Password</label><input type="password" name="password" class="sg-input" placeholder="••••••••"></div>
-          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm Password</label><input type="password" name="password_confirmation" class="sg-input" placeholder="••••••••"></div>
+          <div class="col-span-2"><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Current Password</label><input type="password" name="current_password" class="sg-input" placeholder="••••••••" required></div>
+          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">New Password</label><input type="password" name="password" class="sg-input" placeholder="••••••••" required minlength="8"></div>
+          <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm Password</label><input type="password" name="password_confirmation" class="sg-input" placeholder="••••••••" required minlength="8"></div>
         </div>
         <div class="flex justify-end">
-          <button type="submit" class="sg-btn sg-btn-outline" data-toast="Password updated successfully." data-toast-type="success"><i data-lucide="key-round" class="w-4 h-4"></i> Update Password</button>
+          <button type="submit" class="sg-btn sg-btn-outline"><i data-lucide="key-round" class="w-4 h-4"></i> Update Password</button>
         </div>
       </form>
     </div>

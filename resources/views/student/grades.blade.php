@@ -64,7 +64,7 @@
 
   @include('components.notification', [
     'type' => 'info', 'title' => 'How your final grade is computed',
-    'message' => 'Final Grade = (Prelim × 30%) + (Midterm × 30%) + (Final × 40%). A grade of 75 or higher is passing.',
+    'message' => 'Final Grade = (Prelim + Midterm + Final) / 3. A grade of 75 or higher is passing.',
   ])
 </div>
 @endsection

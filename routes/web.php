@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminSectionController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AdminSubjectController;
+use App\Http\Controllers\AdminTeacherAssignmentController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -28,22 +29,48 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Students
         Route::get('/students', [AdminUserController::class, 'students'])->name('students');
         Route::post('/students', [AdminUserController::class, 'storeStudent'])->name('students.store');
+
+        // Teachers
         Route::get('/teachers', [AdminUserController::class, 'teachers'])->name('teachers');
         Route::post('/teachers', [AdminUserController::class, 'storeTeacher'])->name('teachers.store');
+
+        // Subjects — full CRUD
         Route::get('/subjects', [AdminSubjectController::class, 'index'])->name('subjects');
         Route::post('/subjects', [AdminSubjectController::class, 'store'])->name('subjects.store');
+        Route::get('/subjects/{subject}', [AdminSubjectController::class, 'show'])->name('subjects.show');
+        Route::get('/subjects/{subject}/edit', [AdminSubjectController::class, 'edit'])->name('subjects.edit');
+        Route::put('/subjects/{subject}', [AdminSubjectController::class, 'update'])->name('subjects.update');
+        Route::delete('/subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('subjects.destroy');
+        Route::put('/subjects/{subject}/activate', [AdminSubjectController::class, 'activate'])->name('subjects.activate');
+
+        // Sections
         Route::get('/sections', [AdminSectionController::class, 'index'])->name('sections');
         Route::get('/sections/create', [AdminSectionController::class, 'create'])->name('sections.create');
         Route::post('/sections', [AdminSectionController::class, 'store'])->name('sections.store');
         Route::get('/sections/{section}/edit', [AdminSectionController::class, 'edit'])->name('sections.edit');
         Route::put('/sections/{section}', [AdminSectionController::class, 'update'])->name('sections.update');
+        Route::post('/sections/{section}/sync', [AdminSectionController::class, 'sync'])->name('sections.sync');
         Route::delete('/sections/{section}', [AdminSectionController::class, 'destroy'])->name('sections.destroy');
-        Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
+
+        // School years (under settings)
         Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
         Route::post('/settings/school-years', [AdminSettingController::class, 'storeSchoolYear'])->name('school-years.store');
         Route::put('/settings/school-years/{schoolYear}/activate', [AdminSettingController::class, 'activateSchoolYear'])->name('school-years.activate');
+
+        // Teacher Assignments (spec §11)
+        Route::get('/assignments', [AdminTeacherAssignmentController::class, 'index'])->name('assignments');
+        Route::get('/assignments/create', [AdminTeacherAssignmentController::class, 'create'])->name('assignments.create');
+        Route::post('/assignments', [AdminTeacherAssignmentController::class, 'store'])->name('assignments.store');
+        Route::get('/assignments/{assignment}/edit', [AdminTeacherAssignmentController::class, 'edit'])->name('assignments.edit');
+        Route::put('/assignments/{assignment}', [AdminTeacherAssignmentController::class, 'update'])->name('assignments.update');
+        Route::delete('/assignments/{assignment}', [AdminTeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
+
+        // Reports & profile
+        Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
         Route::get('/profile', [AdminProfileController::class, 'profile'])->name('profile');
         Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
@@ -53,12 +80,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
         Route::get('/classes', [TeacherController::class, 'classes'])->name('classes');
         Route::get('/subjects', [TeacherController::class, 'subjects'])->name('subjects');
+        Route::get('/sections', [TeacherController::class, 'sections'])->name('sections');
         Route::get('/students', [TeacherController::class, 'students'])->name('students');
+        Route::post('/students', [TeacherController::class, 'storeStudent'])->name('students.store');
         Route::get('/grades', [TeacherController::class, 'grades'])->name('grades');
         Route::get('/grades/{teacherSubject}', [TeacherController::class, 'enterGrades'])->name('grades.enter');
         Route::post('/grades/{teacherSubject}/save', [TeacherController::class, 'saveGrades'])->name('grades.save');
         Route::get('/reports', [TeacherController::class, 'reports'])->name('reports');
         Route::get('/profile', [TeacherController::class, 'profile'])->name('profile');
+        Route::put('/profile', [TeacherController::class, 'updateProfile'])->name('profile.update');
     });
 
     Route::prefix('student')->name('student.')->group(function () {
@@ -67,5 +97,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/subjects', [StudentController::class, 'subjects'])->name('subjects');
         Route::get('/records', [StudentController::class, 'records'])->name('records');
         Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
+        Route::put('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
     });
 });

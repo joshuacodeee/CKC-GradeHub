@@ -5,10 +5,9 @@ namespace Database\Seeders;
 use App\Models\Section;
 use App\Models\SchoolYear;
 use App\Models\User;
-use Illuminate\Database\Console\Seeders\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class SectionSeeder extends WithoutModelEvents
+class SectionSeeder extends Seeder
 {
     public function run(): void
     {
@@ -20,26 +19,44 @@ class SectionSeeder extends WithoutModelEvents
             return;
         }
 
-        // Get or create a teacher to use as adviser
         $defaultAdviser = User::where('role', 'teacher')->first();
 
+        // Spec §46 calls out: BSIT 1-A, BSIT 1-B, BSED 1-A, BSBA 1-A.
         $sections = [
-            ['name' => 'BSIT 1-A', 'course' => 'BSIT', 'year_level' => '1st Year'],
-            ['name' => 'BSIT 1-B', 'course' => 'BSIT', 'year_level' => '1st Year'],
-            ['name' => 'BSIT 2-A', 'course' => 'BSIT', 'year_level' => '2nd Year'],
-            ['name' => 'BSCS 1-A', 'course' => 'BSCRIM', 'year_level' => '1st Year'],
-            ['name' => 'BSED 1-A', 'course' => 'BSED', 'year_level' => '1st Year'],
+            ['name' => 'BSIT 1-A',  'course' => 'BS Information Technology', 'year_level' => '1st Year', 'block' => 'A'],
+            ['name' => 'BSIT 1-B',  'course' => 'BS Information Technology', 'year_level' => '1st Year', 'block' => 'B'],
+            ['name' => 'BSIT 2-A',  'course' => 'BS Information Technology', 'year_level' => '2nd Year', 'block' => 'A'],
+            ['name' => 'BSED 1-A',  'course' => 'BS Elementary Education',  'year_level' => '1st Year', 'block' => 'A'],
+            ['name' => 'BSBA 1-A',  'course' => 'BS Business Administration','year_level' => '1st Year', 'block' => 'A'],
         ];
 
         foreach ($sections as $sec) {
-            Section::create([
-                'name' => $sec['name'],
-                'course' => $sec['course'],
-                'year_level' => $sec['year_level'],
-                'adviser_id' => $defaultAdviser?->id,
-                'school_year_id' => $schoolYear->id,
-                'is_active' => true,
-            ]);
+            $section = Section::firstOrCreate(
+                [
+                    'name' => $sec['name'],
+                    'school_year_id' => $schoolYear->id,
+                ],
+                [
+                    'course' => $sec['course'],
+                    'year_level' => $sec['year_level'],
+                    'adviser_id' => $defaultAdviser?->id,
+                    'is_active' => true,
+                ]
+            );
+
+            // Bring legacy rows up to date with the current course naming
+            // and (optional) block label.
+            if (
+                $section->course !== $sec['course']
+                || $section->year_level !== $sec['year_level']
+                || ($sec['block'] ?? null) !== $section->block
+            ) {
+                $section->update([
+                    'course' => $sec['course'],
+                    'year_level' => $sec['year_level'],
+                    'block' => $sec['block'] ?? $section->block,
+                ]);
+            }
         }
     }
 }

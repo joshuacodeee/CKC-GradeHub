@@ -3,13 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\SchoolYear;
-use Illuminate\Database\Console\Seeders\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SchoolYearSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
         // Previous school years (archived)

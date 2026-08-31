@@ -11,7 +11,17 @@ class TeacherSubject extends Model
         'subject_id',
         'section_id',
         'school_year_id',
+        'semester',
+        'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => 'string',
+            'semester' => 'string',
+        ];
+    }
 
     public function teacher()
     {
@@ -33,16 +43,20 @@ class TeacherSubject extends Model
         return $this->belongsTo(SchoolYear::class);
     }
 
+    /**
+     * Friendly display string for the school year + semester pair.
+     * Used in tables and dropdowns throughout the app.
+     */
+    public function schoolYearDisplay(): string
+    {
+        $year = $this->schoolYear?->name ?? '—';
+        $sem = $this->semester ?? '—';
+        return "{$year} — {$sem}";
+    }
+
     public function grades()
     {
-        return $this->hasManyThrough(
-            Grade::class,
-            Enrollment::class,
-            'section_id',
-            'enrollment_id',
-            'section_id',
-            'id'
-        )->whereColumn('grades.subject_id', 'teacher_subjects.subject_id');
+        return $this->hasMany(Grade::class, 'teacher_assignment_id');
     }
 
     public function students()

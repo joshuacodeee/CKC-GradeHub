@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Grade extends Model
 {
     protected $fillable = [
+        'teacher_assignment_id',
+        'student_id',
         'enrollment_id',
         'subject_id',
         'teacher_id',
@@ -16,6 +18,7 @@ class Grade extends Model
         'final_grade',
         'remarks',
         'status',
+        'submitted_at',
     ];
 
     protected function casts(): array
@@ -27,7 +30,24 @@ class Grade extends Model
             'final_grade' => 'decimal:2',
             'remarks' => 'string',
             'status' => 'string',
+            'submitted_at' => 'datetime',
         ];
+    }
+
+    public function teacherAssignment()
+    {
+        return $this->belongsTo(TeacherSubject::class, 'teacher_assignment_id');
+    }
+
+    public function studentUser()
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /** Convenience alias kept for views that call $grade->student. */
+    public function student()
+    {
+        return $this->studentUser();
     }
 
     public function enrollment()
@@ -35,21 +55,14 @@ class Grade extends Model
         return $this->belongsTo(Enrollment::class);
     }
 
-    public function student()
-    {
-        return $this->hasOneThrough(
-            User::class,
-            Enrollment::class,
-            'id',
-            'id',
-            'enrollment_id',
-            'student_id'
-        );
-    }
-
+    /**
+     * Eloquent relationship to the subject. After the migration,
+     * `subject_id` is denormalized onto grades for cheap reads, but the
+     * canonical source is the linked teacher assignment.
+     */
     public function subject()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Subject::class, 'subject_id');
     }
 
     public function teacher()

@@ -25,7 +25,6 @@
               <th class="cursor-pointer" data-sort-column>Subject Code</th>
               <th class="cursor-pointer" data-sort-column>Subject Name</th>
               <th class="cursor-pointer" data-sort-column>Units</th>
-              <th class="cursor-pointer" data-sort-column>Department</th>
               <th class="cursor-pointer" data-sort-column>Status</th>
               <th class="text-right">Actions</th>
             </tr>
@@ -36,16 +35,44 @@
                 <td style="color:var(--sg-text)">{{ $subject->code }}</td>
                 <td class="font-medium" style="color:var(--sg-text)">{{ $subject->name }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $subject->units }}</td>
-                <td style="color:var(--sg-text-muted)">{{ $subject->department ?? '—' }}</td>
-                <td><span
+                <td><span data-col="status"
                     class="sg-badge {{ $subject->is_active ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $subject->is_active ? 'Active' : 'Inactive' }}</span>
                 </td>
-                <td></td>
+                <td class="text-right">
+                  <div class="flex justify-end gap-1">
+                    <a href="{{ route('admin.subjects.show', $subject) }}" class="sg-btn sg-btn-ghost !p-2" title="View">
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </a>
+                    <a href="{{ route('admin.subjects.edit', $subject) }}" class="sg-btn sg-btn-ghost !p-2" title="Edit">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </a>
+                    @if($subject->is_active)
+                      <form method="POST" action="{{ route('admin.subjects.destroy', $subject) }}"
+                        data-confirm="Deactivate subject {{ $subject->code }}? It will no longer appear in new assignments."
+                        data-confirm-title="Deactivate Subject">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="sg-btn sg-btn-ghost !p-2" title="Deactivate"
+                          style="color:var(--sg-danger)">
+                          <i data-lucide="archive" class="w-4 h-4"></i>
+                        </button>
+                      </form>
+                    @else
+                      <form method="POST" action="{{ route('admin.subjects.activate', $subject) }}">
+                        @csrf
+                        @method('PUT')
+                        <button type="submit" class="sg-btn sg-btn-ghost !p-2" title="Activate"
+                          style="color:var(--sg-success)">
+                          <i data-lucide="archive-restore" class="w-4 h-4"></i>
+                        </button>
+                      </form>
+                    @endif
+                  </div>
+                </td>
               </tr>
             @empty
               <tr>
-                <td colspan="6" class="text-center py-10" style="color:var(--sg-text-muted)">No subjects have been created
-                  yet.</td>
+                <td colspan="5" class="text-center py-10" style="color:var(--sg-text-muted)">No subjects have been created yet.</td>
               </tr>
             @endforelse
           </tbody>
@@ -76,30 +103,17 @@
           <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Subject Name</label>
           <input type="text" name="name" required placeholder="e.g. Systems Integration" class="sg-input">
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Units</label>
-            <input type="number" name="units" min="1" max="6" required value="3" class="sg-input">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Status</label>
-            <select name="status" class="sg-select">
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Description <span class="text-xs" style="color:var(--sg-text-muted)">(optional)</span></label>
+          <textarea name="description" rows="2" placeholder="A short description of the course content." class="sg-input"></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Department</label>
-          <select name="department" class="sg-select">
-            <option>College of Computer Studies</option>
-            <option>General Education</option>
-          </select>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Units</label>
+          <input type="number" name="units" min="1" max="6" required value="3" class="sg-input">
         </div>
-        <div class="flex justify-end gap-2 pt-2">
+        <div class="flex justify-end gap-2 pt-4 border-t" style="border-color:var(--sg-border)">
           <button type="button" data-modal-close="add-subject-modal" class="sg-btn sg-btn-outline">Cancel</button>
-          <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save
-            Subject</button>
+          <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Save Subject</button>
         </div>
       </form>
     </div>

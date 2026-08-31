@@ -98,11 +98,11 @@
       <div class="sg-card p-5 space-y-4">
         <h3 class="font-display font-semibold" style="color:var(--sg-text)">School Information</h3>
         <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">School Name</label><input type="text" value="Christ the King College" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Address</label><input type="text" value="123 Rizal Avenue, Imus, Cavite, Philippines" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Contact Number</label><input type="text" value="0917-123-4567" class="sg-input"></div>
-        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label><input type="email" value="info@ckc.edu.ph" class="sg-input"></div>
+        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Address</label><input type="text" placeholder="School address" class="sg-input"></div>
+        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Contact Number</label><input type="text" placeholder="Contact number" class="sg-input"></div>
+        <div><label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label><input type="email" placeholder="info@ckc.edu.ph" class="sg-input"></div>
         <div class="flex justify-end">
-          <button type="button" class="sg-btn sg-btn-primary" data-toast="School information updated successfully."><i data-lucide="check" class="w-4 h-4"></i> Save Changes</button>
+          <button type="button" class="sg-btn sg-btn-primary" disabled title="School settings coming soon"><i data-lucide="check" class="w-4 h-4"></i> Save Changes</button>
         </div>
       </div>
     </div>

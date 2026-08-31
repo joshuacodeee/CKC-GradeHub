@@ -9,8 +9,8 @@ class Subject extends Model
     protected $fillable = [
         'code',
         'name',
+        'description',
         'units',
-        'department',
         'is_active',
     ];
 
@@ -24,6 +24,11 @@ class Subject extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class);
+    }
+
+    public function teacherAssignments()
+    {
+        return $this->hasMany(TeacherSubject::class);
     }
 
     public function teachers()

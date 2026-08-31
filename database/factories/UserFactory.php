@@ -24,7 +24,7 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        $courses = ['BSIT', 'BSSW', 'BSCRIM', 'BSED', 'BSA', 'BSBA', 'BSN', 'BSHM'];
+        $courses = ['BS Elementary Education','BS Secondary Education','BS Business Administration','BS Accountancy','BS Information Technology','BS Social Work','BS Hospitality Management','BS Nursing','BS Criminology'];
         $yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
         $roles = ['admin', 'teacher', 'student'];
         $role = fake()->randomElement($roles);

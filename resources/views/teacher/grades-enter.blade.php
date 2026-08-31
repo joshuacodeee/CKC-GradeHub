@@ -14,7 +14,7 @@
       </p>
     </div>
     <div class="flex items-center gap-2">
-      <span class="sg-badge sg-badge-warning">Weighting: 30% / 30% / 40%</span>
+      <span class="sg-badge sg-badge-warning">Final = (Prelim + Midterm + Final) / 3</span>
       <span class="sg-badge sg-badge-info">{{ $enrollments->count() }} Students</span>
     </div>
   </div>
@@ -43,6 +43,7 @@
         <tbody>
           @foreach ($enrollments as $enrollment)
             @php
+              // $existingGrades is keyed by student_id (user id) per the controller.
               $existing = $existingGrades[$enrollment->student_id] ?? null;
             @endphp
             <tr data-grade-row>
@@ -62,9 +63,15 @@
                 <input type="number" name="grades[{{ $loop->index }}][final]" min="0" max="100" step="0.01"
                   value="{{ $existing->final ?? '' }}" class="sg-input grade-input !w-20 mx-auto !text-center">
               </td>
-              <td class="text-center font-medium" data-final-grade>—</td>
+              <td class="text-center font-medium" data-final-grade>
+                {{ $existing && $existing->final_grade !== null ? number_format($existing->final_grade, 2) : '—' }}
+              </td>
               <td data-remarks>
-                <span class="sg-badge sg-badge-info">Pending</span>
+                @if($existing && $existing->remarks)
+                  <span class="sg-badge {{ $existing->remarks === 'Passed' ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $existing->remarks }}</span>
+                @else
+                  <span class="sg-badge sg-badge-info">Pending</span>
+                @endif
               </td>
             </tr>
           @endforeach
@@ -85,12 +92,15 @@
 
 @push('scripts')
 <script>
-  // Auto-fill final_grade and remarks cells in real-time (mirrors app.js computeFinalGrade)
+  // Auto-fill final_grade and remarks cells in real-time.
+  // Spec §30: Final Grade = (Prelim + Midterm + Final) / 3, passing is >= 75.
   document.addEventListener('DOMContentLoaded', function () {
     function computeFinalGrade(prelim, midterm, final) {
       const p = parseFloat(prelim), m = parseFloat(midterm), f = parseFloat(final);
-      if ([p, m, f].some(n => isNaN(n))) return null;
-      const grade = Math.round((p * 0.3 + m * 0.3 + f * 0.4) * 100) / 100;
+      const values = [p, m, f].filter(n => !isNaN(n));
+      if (values.length === 0) return null;
+      const sum = values.reduce((a, b) => a + b, 0);
+      const grade = Math.round((sum / values.length) * 100) / 100;
       const passed = grade >= 75;
       return {
         grade: grade.toFixed(2),
@@ -135,17 +145,6 @@
     document.getElementById('btn-print')?.addEventListener('click', function () {
       window.print();
     });
-
-    // Confirmation for submit
-    const form = document.getElementById('grade-entry-form');
-    const submitBtn = form?.querySelector('button[value="submit"]');
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function (e) {
-        if (!confirm('Submit all grades for this class? Once submitted, you cannot edit them directly.')) {
-          e.preventDefault();
-        }
-      });
-    }
   });
 </script>
 @endpush

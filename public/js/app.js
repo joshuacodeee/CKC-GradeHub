@@ -511,4 +511,21 @@
         computeFinalGrade,
         renderIcons,
     };
+
+    // Auto-dismiss flash banners after a few seconds, and wire the close
+    // button so users can dismiss them immediately.
+    function initFlash() {
+        document.querySelectorAll("[data-flash]").forEach(function (el) {
+            const close = function () {
+                el.style.transition = "opacity .2s ease";
+                el.style.opacity = "0";
+                setTimeout(function () { el.remove(); }, 200);
+            };
+            el.querySelector("[data-flash-close]")?.addEventListener("click", close);
+            if (el.getAttribute("data-flash-type") === "success" || el.getAttribute("data-flash-type") === "info") {
+                setTimeout(close, 4000);
+            }
+        });
+    }
+    initFlash();
 })();

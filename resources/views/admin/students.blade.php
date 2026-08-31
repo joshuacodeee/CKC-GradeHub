@@ -29,6 +29,7 @@
               <th class="cursor-pointer" data-sort-column>Name</th>
               <th class="cursor-pointer" data-sort-column>Course</th>
               <th class="cursor-pointer" data-sort-column>Year Level</th>
+              <th class="cursor-pointer" data-sort-column>Block</th>
               <th class="cursor-pointer" data-sort-column>Section</th>
               <th class="cursor-pointer" data-sort-column>Status</th>
               <th class="text-right">Actions</th>
@@ -41,6 +42,7 @@
                 <td class="font-medium" style="color:var(--sg-text)">{{ $student->name }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->course ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->year_level ?? '—' }}</td>
+                <td style="color:var(--sg-text-muted)">{{ $student->block ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">—</td>
                 <td><span
                     class="sg-badge {{ $student->is_active ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $student->is_active ? 'Active' : 'Inactive' }}</span>
@@ -49,7 +51,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="7" class="text-center py-10" style="color:var(--sg-text-muted)">No student accounts have been
+                <td colspan="8" class="text-center py-10" style="color:var(--sg-text-muted)">No student accounts have been
                   created yet.</td>
               </tr>
             @endforelse
@@ -99,10 +101,14 @@
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>
             <input type="text" name="student_id" required placeholder="e.g. 2026-0001" class="sg-input">
           </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
+            <input type="email" name="email" required placeholder="e.g. student@ckcgingoog.edu.ph" class="sg-input">
+          </div>
           <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Course</label>
             <select name="course" class="sg-select" required>
-              @foreach (['BSIT', 'BSSW', 'BSCRIM', 'BSED', 'BSA', 'BSBA', 'BSN', 'BSHM'] as $course)
+              @foreach (['BS Elementary Education','BS Secondary Education','BS Business Administration','BS Accountancy','BS Information Technology','BS Social Work','BS Hospitality Management','BS Nursing','BS Criminology'] as $course)
                 <option value="{{ $course }}">{{ $course }}</option>
               @endforeach
             </select>
@@ -114,6 +120,19 @@
               <option>2nd Year</option>
               <option>3rd Year</option>
               <option>4th Year</option>
+              <option>5th Year</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Block <span
+                style="color:var(--sg-text-muted)">(optional)</span></label>
+            <select name="block" class="sg-select">
+              <option value="">— None —</option>
+              <option>A</option>
+              <option>B</option>
+              <option>C</option>
+              <option>D</option>
+              <option>E</option>
             </select>
           </div>
         </div>

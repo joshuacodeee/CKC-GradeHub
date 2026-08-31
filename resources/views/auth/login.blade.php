@@ -124,8 +124,10 @@
           </button>
         </form>
 
-        <p class="text-center text-sm mt-6" style="color:var(--sg-text-muted)">New student? <a
-            href="{{ route('register') }}" class="font-semibold" style="color:var(--sg-navy-600)">Create an account</a>
+        <p class="text-center text-sm mt-6" style="color:var(--sg-text-muted)">
+          New student?
+          <a href="{{ route('register') }}" class="font-semibold" style="color:var(--sg-navy-600)">Create a student
+            account</a>
         </p>
       </div>
     </div>

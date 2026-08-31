@@ -2,9 +2,14 @@
 
 @section('content')
 <div class="space-y-5">
-  <div>
-    <h2 class="font-display font-semibold text-lg" style="color:var(--sg-text)">Students in My Classes</h2>
-    <p class="text-sm" style="color:var(--sg-text-muted)">All students across your assigned sections</p>
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="font-display font-semibold text-lg" style="color:var(--sg-text)">Students in My Classes</h2>
+      <p class="text-sm" style="color:var(--sg-text-muted)">All students across your assigned sections</p>
+    </div>
+    <button data-modal-open="add-student-modal" class="sg-btn sg-btn-primary">
+      <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>Add Student
+    </button>
   </div>
 
   <div class="sg-card p-5">
@@ -53,9 +58,10 @@
                 @endforeach
               </td>
               <td class="text-right">
-                <button class="sg-btn sg-btn-ghost !p-2" data-toast="Viewing grades for {{ $student->name }} (demo).">
+                <a href="{{ route('teacher.grades') }}?student={{ $student->id }}"
+                  class="sg-btn sg-btn-ghost !p-2" title="View grades for {{ $student->name }}">
                   <i data-lucide="external-link" class="w-4 h-4"></i>
-                </button>
+                </a>
               </td>
             </tr>
           @empty
@@ -70,6 +76,50 @@
         <p class="text-sm" style="color:var(--sg-text-muted)">No students match your search.</p>
       </div>
     </div>
+  </div>
+</div>
+
+{{-- Add Student Modal --}}
+<div id="add-student-modal" class="hidden fixed inset-0 z-[70] sg-modal-backdrop flex items-center justify-center p-4">
+  <div class="sg-modal sg-surface rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style="border-color:var(--sg-border)">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:var(--sg-info-bg)">
+          <i data-lucide="user-plus" class="w-4.5 h-4.5" style="color:var(--sg-navy-600)"></i>
+        </div>
+        <h3 class="font-display font-semibold text-base" style="color:var(--sg-text)">Add New Student</h3>
+      </div>
+      <button data-modal-close="add-student-modal" class="sg-btn sg-btn-ghost !p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <form id="add-student-form" method="POST" action="{{ route('teacher.students.store') }}" class="p-6 overflow-y-auto space-y-4">
+      @csrf
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
+          <input type="text" name="name" required placeholder="e.g. Juan Dela Cruz" class="sg-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>
+          <input type="text" name="student_id" required placeholder="e.g. 2026-0001" class="sg-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
+          <input type="email" name="email" required placeholder="e.g. student@ckcgingoog.edu.ph" class="sg-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Password</label>
+          <input type="password" name="password" required minlength="8" class="sg-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm Password</label>
+          <input type="password" name="password_confirmation" required minlength="8" class="sg-input">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-4 border-t" style="border-color:var(--sg-border)">
+        <button type="button" data-modal-close="add-student-modal" class="sg-btn sg-btn-outline">Cancel</button>
+        <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Save Student</button>
+      </div>
+    </form>
   </div>
 </div>
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GradingScale;
 use Illuminate\Database\Eloquent\Model;
 
 class Grade extends Model
@@ -68,5 +69,14 @@ class Grade extends Model
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    /**
+     * CKC grade equivalent (1.0–5.0) computed from `final_grade`.
+     * Returns null when no final grade has been recorded yet.
+     */
+    public function getGradeEquivalentAttribute(): ?float
+    {
+        return GradingScale::equivalent($this->final_grade);
     }
 }

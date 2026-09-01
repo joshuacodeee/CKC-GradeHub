@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminSectionController;
 use App\Http\Controllers\AdminSettingController;
@@ -10,11 +11,12 @@ use App\Http\Controllers\AdminTeacherAssignmentController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'landing')->name('landing');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/home', fn() => redirect()->route('login'))->name('home');
 
 Route::middleware('guest')->group(function () {
@@ -25,6 +27,12 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+    Route::post('/read', [NotificationController::class, 'markRead'])->name('read');
+    Route::post('/read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
+    Route::get('/unread', [NotificationController::class, 'unread'])->name('unread');
+});
 
 Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -60,6 +68,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
         Route::post('/settings/school-years', [AdminSettingController::class, 'storeSchoolYear'])->name('school-years.store');
         Route::put('/settings/school-years/{schoolYear}/activate', [AdminSettingController::class, 'activateSchoolYear'])->name('school-years.activate');
+        Route::put('/settings/school-info', [AdminSettingController::class, 'updateSchoolInfo'])->name('school-info.update');
+        Route::put('/settings/grading-scale', [AdminSettingController::class, 'updateGradingScale'])->name('grading-scale.update');
 
         // Teacher Assignments (spec §11)
         Route::get('/assignments', [AdminTeacherAssignmentController::class, 'index'])->name('assignments');
@@ -71,6 +81,7 @@ Route::middleware('auth')->group(function () {
 
         // Reports & profile
         Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
+        Route::get('/reports/{assignment}', [AdminReportController::class, 'show'])->name('reports.show');
         Route::get('/profile', [AdminProfileController::class, 'profile'])->name('profile');
         Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');

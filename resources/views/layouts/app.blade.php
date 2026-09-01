@@ -39,7 +39,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   {{-- Custom design tokens & component styles --}}
-  <link rel="stylesheet" href="/css/custom.css">
+  <link rel="stylesheet" href="/css/custom.css?v={{ filemtime(public_path('css/custom.css')) }}">
 
   <style>
     .sidebar-collapsed #sg-sidebar {

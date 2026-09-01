@@ -84,13 +84,40 @@ class StudentController extends Controller
 
         $gwa = $this->computeGwa($grades);
 
+        $standing = match (true) {
+            $gwa === null  => 'No grades yet',
+            $gwa >= 90     => "Dean's list",
+            $gwa >= 85     => "Very good standing",
+            $gwa >= 80     => "Good standing",
+            $gwa >= 75     => 'Passing',
+            default        => 'Needs improvement',
+        };
+        $standingTone = match (true) {
+            $gwa === null  => 'info',
+            $gwa >= 90     => 'success',
+            $gwa >= 75     => 'info',
+            default        => 'danger',
+        };
+
+        $latestGrade = $grades
+            ->sortByDesc(fn ($g) => $g->updated_at ?? now()->subYears(10))
+            ->first();
+
+        $enrolledCount = (int) $enrolledSubjects->count();
+        $gradedCount = $grades->whereNotNull('final_grade')->count();
+
         return view('student.dashboard', [
             'user' => $user,
             'section' => $section,
             'enrolledSubjects' => $enrolledSubjects,
             'totalUnits' => $totalUnits,
+            'enrolledCount' => $enrolledCount,
+            'gradedCount' => $gradedCount,
             'grades' => $grades,
             'gwa' => $gwa,
+            'standing' => $standing,
+            'standingTone' => $standingTone,
+            'latestGrade' => $latestGrade,
             'schoolYear' => $schoolYear,
         ]);
     }

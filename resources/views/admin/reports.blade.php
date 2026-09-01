@@ -56,9 +56,10 @@
               </td>
               <td class="text-right no-print">
                 @if($r['status'] !== 'Pending')
-                  <button class="sg-btn sg-btn-ghost !p-2" data-toast="Opening detailed report for {{ $r['subject'] }} — {{ $r['section'] }} (coming soon).">
+                  <a href="{{ route('admin.reports.show', $r['assignment_id']) }}"
+                    class="sg-btn sg-btn-ghost !p-2 inline-flex" title="View detailed grade report">
                     <i data-lucide="external-link" class="w-4 h-4"></i>
-                  </button>
+                  </a>
                 @else
                   <span class="sg-badge sg-badge-info">Not yet submitted</span>
                 @endif

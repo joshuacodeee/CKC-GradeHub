@@ -208,12 +208,55 @@ body {
 }
 @keyframes sg-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
+/* Settings tab nav — explicit color guarantees so light mode never goes invisible.
+   Inactive buttons use --sg-text on a transparent surface; active uses white on navy-700. */
+[data-tabs] [data-tab-target] {
+  color: var(--sg-text);
+  background: transparent;
+}
+[data-tabs] [data-tab-target] i[data-lucide] {
+  color: var(--sg-text-muted);
+}
+[data-tabs] [data-tab-target]:hover {
+  background: var(--sg-navy-50);
+  color: var(--sg-text);
+}
+[data-tabs] [data-tab-target]:hover i[data-lucide] {
+  color: var(--sg-navy-600);
+}
+[data-tabs] [data-tab-target].sg-tab-active {
+  background: var(--sg-navy-700);
+  color: #fff !important;
+}
+[data-tabs] [data-tab-target].sg-tab-active i[data-lucide] {
+  color: var(--sg-brass-500);
+}
+html.dark [data-tabs] [data-tab-target]:hover {
+  background: var(--sg-navy-100);
+}
+
 /* Print */
 @media print {
   .no-print { display: none !important; }
-  body { background: #fff !important; }
+  .no-print-flex { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: #fff !important; color: #000 !important; }
   .print-area { box-shadow: none !important; border: none !important; }
+  .sg-card { box-shadow: none !important; }
+  /* On print, hide everything except the grade card */
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 24px !important; }
+  .sg-table { font-size: 11px; }
+  .sg-table th, .sg-table td { padding: 6px 8px !important; }
+  /* Force absolutely-positioned low-opacity logo to print */
+  .print-area [style*="position: absolute"],
+  .print-area [style*="position:absolute"] { position: absolute !important; }
+  @page { margin: 1.5cm; }
 }
+
+/* Hidden by default; shown only in print */
+.print-only { display: none; }
 
 /* Small helpers */
 .sg-scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }

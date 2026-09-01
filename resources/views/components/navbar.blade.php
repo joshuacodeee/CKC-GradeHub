@@ -4,6 +4,7 @@
   $userName = $user?->name ?? 'Account';
   $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
   $navbarNotifications = $navbarNotifications ?? collect();
+  $navbarUnreadCount   = $navbarUnreadCount ?? 0;
   $toneStyles = [
     'info'    => ['bg' => 'var(--sg-info-bg)',    'fg' => 'var(--sg-navy-600)'],
     'success' => ['bg' => 'var(--sg-success-bg)', 'fg' => 'var(--sg-success)'],
@@ -42,13 +43,14 @@
     </button>
 
     {{-- Notifications --}}
-    <div class="relative">
+    <div class="relative" data-notif-root>
       <button data-dropdown-toggle="notif-menu" class="sg-btn sg-btn-ghost !p-2 relative"
-        aria-label="Notifications">
+        aria-label="Notifications" data-notif-bell>
         <i data-lucide="bell" class="w-5 h-5"></i>
-        @if ($navbarNotifications->count() > 0)
-          <span class="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold text-white flex items-center justify-center"
-            style="background:var(--sg-danger)">{{ $navbarNotifications->count() }}</span>
+        @if ($navbarUnreadCount > 0)
+          <span data-notif-badge
+            class="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold text-white flex items-center justify-center"
+            style="background:var(--sg-danger)">{{ $navbarUnreadCount }}</span>
         @endif
       </button>
       <div data-dropdown-menu="notif-menu" class="hidden absolute right-0 mt-2 w-80 sg-card p-2 z-40">
@@ -56,9 +58,12 @@
           <p class="text-xs font-semibold uppercase tracking-wider" style="color:var(--sg-text-muted)">
             Notifications
           </p>
-          <span class="text-xs" style="color:var(--sg-text-muted)">
-            {{ $navbarNotifications->count() }} {{ $navbarNotifications->count() === 1 ? 'new' : 'new' }}
-          </span>
+          <button type="button" data-notif-mark-all
+            class="text-[11px] font-semibold uppercase tracking-wider hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+            style="color:var(--sg-navy-600)"
+            {{ $navbarUnreadCount === 0 ? 'disabled' : '' }}>
+            Mark all read
+          </button>
         </div>
 
         @forelse ($navbarNotifications as $notif)
@@ -67,16 +72,34 @@
             $icon = $notif['icon'] ?? 'info';
             $title = $notif['title'] ?? '';
             $time = $notif['time_human'] ?? '';
+            $notifId = $notif['id'] ?? '';
+            $isRead = $notif['read'] ?? false;
           @endphp
-          <div class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50">
+          <div class="notif-item group flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-50"
+            data-notif-id="{{ $notifId }}"
+            data-notif-read="{{ $isRead ? '1' : '0' }}">
             <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style="background: {{ $tone['bg'] }}">
               <i data-lucide="{{ $icon }}" class="w-4 h-4" style="color: {{ $tone['fg'] }}"></i>
             </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-sm" style="color:var(--sg-text)">{{ $title }}</p>
+            <div class="min-w-0 flex-1 {{ $isRead ? 'opacity-60' : '' }}">
+              <p class="text-sm" style="color:var(--sg-text)">
+                @unless ($isRead)
+                  <span class="inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle"
+                    style="background:var(--sg-navy-600)"></span>
+                @endunless
+                {{ $title }}
+              </p>
               <p class="text-xs" style="color:var(--sg-text-muted)">{{ $time }} ago</p>
             </div>
+            @unless ($isRead)
+              <button type="button" data-notif-mark
+                data-notif-id="{{ $notifId }}"
+                class="sg-btn sg-btn-ghost !p-1 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                title="Mark as read" aria-label="Mark as read">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </button>
+            @endunless
           </div>
         @empty
           <div class="px-3 py-8 text-center">
@@ -121,3 +144,104 @@
     </div>
   </div>
 </header>
+
+@once
+  @push('scripts')
+    <script>
+      (function () {
+        const root = document.querySelector('[data-notif-root]');
+        if (!root) return;
+
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const badge = root.querySelector('[data-notif-badge]');
+        const markAllBtn = root.querySelector('[data-notif-mark-all]');
+
+        const refreshBadge = () => {
+          const unread = root.querySelectorAll('.notif-item[data-notif-read="0"]').length;
+          if (unread === 0) {
+            if (badge) badge.remove();
+            if (markAllBtn) {
+              markAllBtn.setAttribute('disabled', 'disabled');
+            }
+          } else {
+            if (badge) {
+              badge.textContent = unread;
+            } else {
+              const btn = root.querySelector('[data-notif-bell]');
+              if (btn) {
+                const span = document.createElement('span');
+                span.setAttribute('data-notif-badge', '');
+                span.className = 'absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold text-white flex items-center justify-center';
+                span.style.background = 'var(--sg-danger)';
+                span.textContent = unread;
+                btn.appendChild(span);
+              }
+            }
+            if (markAllBtn) markAllBtn.removeAttribute('disabled');
+          }
+        };
+
+        const postJson = (url, body) => fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(body || {}),
+          credentials: 'same-origin',
+        });
+
+        const markOne = (id) => {
+          const item = root.querySelector(`.notif-item[data-notif-id="${CSS.escape(id)}"]`);
+          if (!item || item.dataset.notifRead === '1') return;
+          postJson('{{ route('notifications.read') }}', { id }).then((r) => r.json()).then((data) => {
+            if (!data.ok) return;
+            item.dataset.notifRead = '1';
+            const text = item.querySelector('.min-w-0');
+            if (text) text.classList.add('opacity-60');
+            const dot = text?.querySelector('span.inline-block');
+            if (dot) dot.remove();
+            const btn = item.querySelector('[data-notif-mark]');
+            if (btn) btn.remove();
+            refreshBadge();
+          }).catch(() => {});
+        };
+
+        root.addEventListener('click', (e) => {
+          const oneBtn = e.target.closest('[data-notif-mark]');
+          if (oneBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            markOne(oneBtn.dataset.notifId);
+            return;
+          }
+        });
+
+        if (markAllBtn) {
+          markAllBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const items = root.querySelectorAll('.notif-item[data-notif-read="0"]');
+            if (items.length === 0) return;
+            const ids = Array.from(items).map((el) => el.dataset.notifId);
+            postJson('{{ route('notifications.read-all') }}', { ids }).then((r) => r.json()).then((data) => {
+              if (!data.ok) return;
+              items.forEach((el) => {
+                el.dataset.notifRead = '1';
+                const text = el.querySelector('.min-w-0');
+                if (text) text.classList.add('opacity-60');
+                const dot = text?.querySelector('span.inline-block');
+                if (dot) dot.remove();
+                const btn = el.querySelector('[data-notif-mark]');
+                if (btn) btn.remove();
+              });
+              refreshBadge();
+            }).catch(() => {});
+          });
+        }
+      })();
+    </script>
+  @endpush
+@endonce

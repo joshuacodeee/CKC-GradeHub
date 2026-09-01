@@ -8,9 +8,11 @@
 @php
   $palette = [
     'navy'    => ['bg' => 'var(--sg-info-bg)',    'fg' => 'var(--sg-navy-600)'],
+    'info'    => ['bg' => 'var(--sg-info-bg)',    'fg' => 'var(--sg-navy-600)'],
     'success' => ['bg' => 'var(--sg-success-bg)', 'fg' => 'var(--sg-success)'],
     'brass'   => ['bg' => 'var(--sg-brass-100)',  'fg' => 'var(--sg-brass-600)'],
     'warning' => ['bg' => 'var(--sg-warning-bg)', 'fg' => 'var(--sg-warning)'],
+    'danger'  => ['bg' => 'var(--sg-danger-bg)',  'fg' => 'var(--sg-danger)'],
   ][$color ?? 'navy'];
 @endphp
 <div class="sg-card p-5 flex items-start justify-between">

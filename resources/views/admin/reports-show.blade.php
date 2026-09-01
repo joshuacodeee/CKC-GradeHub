@@ -1,0 +1,332 @@
+@extends('layouts.app', ['role' => 'admin', 'active' => 'reports', 'title' => 'Grade Report'])
+
+@php
+    $subject  = $assignment->subject;
+    $section  = $assignment->section;
+    $teacher  = $assignment->teacher;
+    $sy       = $assignment->schoolYear;
+    $gradeMap = [
+        '90-100'   => ['bar' => 'var(--sg-success)', 'chip' => 'var(--sg-success-bg)', 'fg' => 'var(--sg-success)'],
+        '85-89'    => ['bar' => 'var(--sg-navy-500)', 'chip' => 'var(--sg-info-bg)',    'fg' => 'var(--sg-navy-600)'],
+        '80-84'    => ['bar' => 'var(--sg-brass-500)','chip' => 'var(--sg-warning-bg)', 'fg' => 'var(--sg-warning)'],
+        '75-79'    => ['bar' => '#a9761f',           'chip' => 'var(--sg-warning-bg)', 'fg' => 'var(--sg-warning)'],
+        'Below 75' => ['bar' => 'var(--sg-danger)',   'chip' => 'var(--sg-danger-bg)',  'fg' => 'var(--sg-danger)'],
+    ];
+    $totalDist = array_sum($distribution);
+@endphp
+
+@section('content')
+<div class="space-y-5">
+
+    {{-- Breadcrumb / back --}}
+    <div class="flex items-center gap-2 text-sm" style="color:var(--sg-text-muted)">
+        <a href="{{ route('admin.reports') }}" class="inline-flex items-center gap-1.5 hover:opacity-80">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Grade Reports
+        </a>
+    </div>
+
+    {{-- Header --}}
+    <div class="sg-card p-6">
+        <div class="flex items-start justify-between flex-wrap gap-4">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="sg-badge"
+                        style="background:var(--sg-info-bg); color:var(--sg-navy-600)">{{ $subject?->code ?? '—' }}</span>
+                    <span class="sg-badge"
+                        style="background:var(--sg-brass-100); color:var(--sg-brass-600)">
+                        {{ $sy?->name ?? 'All terms' }}
+                        @if($assignment->semester) · {{ $assignment->semester }} @endif
+                    </span>
+                    <span class="sg-badge {{ $assignment->status === 'active' ? 'sg-badge-success' : 'sg-badge-info' }}">
+                        {{ ucfirst($assignment->status ?? 'active') }}
+                    </span>
+                </div>
+                <h2 class="font-display text-2xl font-bold" style="color:var(--sg-text)">
+                    {{ $subject?->name ?? 'Subject' }}
+                </h2>
+                @if($subject?->description)
+                    <p class="text-sm mt-1 max-w-2xl" style="color:var(--sg-text-muted)">
+                        {{ $subject->description }}
+                    </p>
+                @endif
+
+                <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" style="color:var(--sg-text-muted)">
+                    <span class="inline-flex items-center gap-1.5">
+                        <i data-lucide="layers" class="w-4 h-4"></i>
+                        {{ $section?->name ?? '—' }}
+                        @if($section?->block) · Block {{ $section->block }} @endif
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        {{ $teacher?->name ?? '—' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        {{ $subject?->units ?? '—' }} {{ \Illuminate\Support\Str::plural('unit', (int) ($subject?->units ?? 0)) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex gap-2 flex-shrink-0">
+                <button data-print class="sg-btn sg-btn-outline">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Stats --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        @include('components.stat-card', [
+            'label' => 'Enrolled Students',
+            'value' => $totalStudents,
+            'icon'  => 'users',
+            'color' => 'navy',
+        ])
+        @include('components.stat-card', [
+            'label' => 'Grades Recorded',
+            'value' => $gradedCount,
+            'icon'  => 'file-check-2',
+            'color' => 'success',
+        ])
+        @include('components.stat-card', [
+            'label' => 'Submission Status',
+            'value' => $totalStudents > 0
+                ? $submittedCount . ' / ' . $totalStudents
+                : '0',
+            'icon'  => 'send',
+            'color' => $submittedCount === $totalStudents && $totalStudents > 0 ? 'success' : 'warning',
+        ])
+        @include('components.stat-card', [
+            'label' => 'Class Average',
+            'value' => $classAverage !== null ? number_format((float) $classAverage, 2) : '—',
+            'icon'  => 'chart-line',
+            'color' => 'brass',
+        ])
+    </div>
+
+    {{-- Grade distribution + summary --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {{-- Distribution --}}
+        <div class="sg-card p-5 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-display font-semibold" style="color:var(--sg-text)">Grade Distribution</h3>
+                    <p class="text-xs" style="color:var(--sg-text-muted)">
+                        {{ $totalDist }} {{ \Illuminate\Support\Str::plural('grade', $totalDist) }} recorded
+                    </p>
+                </div>
+            </div>
+            @if ($totalDist > 0)
+                <div class="space-y-3">
+                    @foreach ($distribution as $band => $count)
+                        @php
+                            $pct = $totalDist > 0 ? round(($count / $totalDist) * 100) : 0;
+                            $style = $gradeMap[$band] ?? $gradeMap['Below 75'];
+                        @endphp
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-medium" style="color:var(--sg-text)">{{ $band }}</span>
+                                <span style="color:var(--sg-text-muted)">
+                                    {{ $count }} · {{ $pct }}%
+                                </span>
+                            </div>
+                            <div class="h-2.5 rounded-full overflow-hidden" style="background:var(--sg-border)">
+                                <div class="h-full rounded-full sg-transition"
+                                    style="width: {{ max($pct, 2) }}%; background: {{ $style['bar'] }}"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="py-10 text-center text-sm" style="color:var(--sg-text-muted)">
+                    Distribution will appear once grades are recorded.
+                </div>
+            @endif
+        </div>
+
+        {{-- Section / teacher info --}}
+        <div class="sg-card p-5">
+            <h3 class="font-display font-semibold mb-3" style="color:var(--sg-text)">Class Details</h3>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">Section</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">
+                        {{ $section?->name ?? '—' }}
+                        @if($section?->block)<br><span style="color:var(--sg-text-muted)">Block {{ $section->block }}</span>@endif
+                    </dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">Course</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">{{ $section?->course ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">Year level</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">{{ $section?->year_level ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">Adviser</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">{{ $section?->adviser?->name ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-3 pt-3 border-t" style="border-color:var(--sg-border)">
+                    <dt style="color:var(--sg-text-muted)">Teacher</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">{{ $teacher?->name ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">Teacher email</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">{{ $teacher?->email ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt style="color:var(--sg-text-muted)">School year</dt>
+                    <dd class="text-right" style="color:var(--sg-text)">
+                        {{ $sy?->name ?? '—' }}
+                        @if($assignment->semester)<br><span style="color:var(--sg-text-muted)">{{ $assignment->semester }}</span>@endif
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    {{-- Grade matrix --}}
+    <div class="sg-card p-5 print-area">
+        <div class="flex items-center justify-between mb-4 no-print-flex">
+            <div>
+                <h3 class="font-display font-semibold" style="color:var(--sg-text)">Student Grades</h3>
+                <p class="text-xs" style="color:var(--sg-text-muted)">
+                    {{ $totalStudents }} {{ \Illuminate\Support\Str::plural('student', $totalStudents) }} enrolled in this section
+                </p>
+            </div>
+        </div>
+
+        {{-- Print-only institutional header --}}
+        <div class="print-only mb-5">
+            <div class="text-center">
+                <p class="text-xs uppercase tracking-[0.22em]" style="color:var(--sg-text-muted)">
+                    Christ the King College · Gingoog City
+                </p>
+                <h2 class="font-display text-2xl font-bold mt-1" style="color:var(--sg-text)">
+                    {{ $subject?->name ?? 'Subject' }}
+                    <span style="color:var(--sg-text-muted)">—</span>
+                    {{ $subject?->code ?? '' }}
+                </h2>
+                <p class="text-sm mt-1" style="color:var(--sg-text)">
+                    {{ $section?->course ?? '—' }}
+                    @if($section?->year_level) · {{ $section->year_level }} @endif
+                    @if($section?->block) · Block {{ $section->block }} @endif
+                    <span style="color:var(--sg-text-muted)">|</span>
+                    {{ $assignment->semester ?? '—' }},
+                    S.Y. {{ $sy?->name ?? '—' }}
+                </p>
+                <p class="text-xs mt-1" style="color:var(--sg-text-muted)">
+                    Units: {{ $subject?->units ?? '—' }}
+                    @if($teacher) · Teacher: {{ $teacher->name }} @endif
+                </p>
+            </div>
+            <hr class="my-4" style="border-color:var(--sg-border)">
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="sg-table">
+                <thead>
+                    <tr>
+                        <th class="w-10">#</th>
+                        <th>Student</th>
+                        <th>Student ID</th>
+                        <th class="text-center">Course · Year · Block</th>
+                        <th class="text-center">Units</th>
+                        <th class="text-center">Prelim</th>
+                        <th class="text-center">Midterm</th>
+                        <th class="text-center">Final</th>
+                        <th class="text-center">Final Grade</th>
+                        <th class="text-center">Equivalent</th>
+                        <th>Remarks</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($gradeRows as $i => $row)
+                        @php
+                            $final = $row['final_grade'] !== null ? (float) $row['final_grade'] : null;
+                            $remarks = $row['remarks'] ?? null;
+                            $status  = $row['status'] ?? null;
+                            $remarkColor = match (strtolower((string) $remarks)) {
+                                'passed'   => 'sg-badge-success',
+                                'failed'   => 'sg-badge-danger',
+                                'inc'      => 'sg-badge-warning',
+                                'dropped'  => 'sg-badge-info',
+                                default    => null,
+                            };
+                            $statusColor = match ($status) {
+                                'submitted' => 'sg-badge-success',
+                                'draft'     => 'sg-badge-warning',
+                                default     => null,
+                            };
+                        @endphp
+                        <tr>
+                            <td style="color:var(--sg-text-muted)">{{ $i + 1 }}</td>
+                            <td style="color:var(--sg-text)">{{ $row['student_name'] }}</td>
+                            <td style="color:var(--sg-text-muted)">{{ $row['student_no'] }}</td>
+                            <td class="text-center" style="color:var(--sg-text-muted)">
+                                {{ trim(($row['course'] ?? '') . ' · ' . ($row['year_level'] ?? '') . ($row['block'] ? ' · Block ' . $row['block'] : ''), ' ·') ?: '—' }}
+                            </td>
+                            <td class="text-center" style="color:var(--sg-text)">
+                                {{ $subject?->units ?? '—' }}
+                            </td>
+                            <td class="text-center" style="color:var(--sg-text)">
+                                @if ($row['prelim'] !== null)
+                                    {{ number_format((float) $row['prelim'], 2) }}
+                                @else
+                                    <span style="color:var(--sg-text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td class="text-center" style="color:var(--sg-text)">
+                                @if ($row['midterm'] !== null)
+                                    {{ number_format((float) $row['midterm'], 2) }}
+                                @else
+                                    <span style="color:var(--sg-text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td class="text-center" style="color:var(--sg-text)">
+                                @if ($row['final'] !== null)
+                                    {{ number_format((float) $row['final'], 2) }}
+                                @else
+                                    <span style="color:var(--sg-text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td class="text-center font-semibold" style="color:var(--sg-navy-700)">
+                                {{ $final !== null ? number_format($final, 2) : '—' }}
+                            </td>
+                            <td class="text-center font-semibold" style="color:var(--sg-navy-700)">
+                                @php $equivalent = $final !== null ? \App\Support\GradingScale::equivalent($final) : null; @endphp
+                                {{ $equivalent !== null ? number_format((float) $equivalent, 1) : '—' }}
+                            </td>
+                            <td>
+                                @if ($remarkColor)
+                                    <span class="sg-badge {{ $remarkColor }}">{{ ucfirst((string) $remarks) }}</span>
+                                @else
+                                    <span style="color:var(--sg-text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($statusColor)
+                                    <span class="sg-badge {{ $statusColor }}">{{ ucfirst($status) }}</span>
+                                @else
+                                    <span style="color:var(--sg-text-muted)">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="12" class="text-center py-10" style="color:var(--sg-text-muted)">
+                                No enrolled students in this section yet.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+@endsection

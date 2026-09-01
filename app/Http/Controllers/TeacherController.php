@@ -7,6 +7,7 @@ use App\Models\Grade;
 use App\Models\SchoolYear;
 use App\Models\TeacherSubject;
 use App\Models\User;
+use App\Support\GradingScale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -59,8 +60,43 @@ class TeacherController extends Controller
             ->where('status', 'draft')
             ->count();
 
+        // Per-class progress: total students enrolled vs. grade rows submitted for that assignment.
+        $submittedByAssignment = Grade::whereIn('teacher_assignment_id', $assignmentIds)
+            ->where('status', 'submitted')
+            ->selectRaw('teacher_assignment_id, COUNT(*) as submitted_count, AVG(final_grade) as avg_grade')
+            ->groupBy('teacher_assignment_id')
+            ->get()
+            ->keyBy('teacher_assignment_id');
+
+        $classRows = $assignedClasses->map(function ($class) use ($submittedByAssignment) {
+            $total = $class->section?->studentCount() ?? 0;
+            $row = $submittedByAssignment->get($class->id);
+            $submitted = (int) ($row->submitted_count ?? 0);
+            $avg = $row->avg_grade !== null ? round((float) $row->avg_grade, 2) : null;
+            $pct = $total > 0 ? (int) round(($submitted / $total) * 100) : 0;
+            return [
+                'id'        => $class->id,
+                'subject'   => $class->subject,
+                'section'   => $class->section,
+                'schoolYear'=> $class->schoolYear,
+                'total'     => $total,
+                'submitted' => $submitted,
+                'pct'       => $pct,
+                'average'   => $avg,
+            ];
+        });
+
+        // Recent grades across all of this teacher's classes.
+        $recentGrades = Grade::with(['studentUser', 'subject'])
+            ->where('teacher_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->limit(6)
+            ->get();
+
         return view('teacher.dashboard', [
             'assignedClasses' => $assignedClasses,
+            'classRows'       => $classRows,
+            'recentGrades'    => $recentGrades,
             'totalStudents' => $totalStudents,
             'pendingGrades' => $pendingGrades,
             'schoolYear' => $schoolYear,
@@ -269,9 +305,7 @@ class TeacherController extends Controller
             $midterm = $row['midterm'] ?? null;
             $final = $row['final'] ?? null;
             $finalGrade = $this->computeFinalGrade($prelim, $midterm, $final);
-            $remarks = $finalGrade !== null
-                ? ($finalGrade >= 75 ? 'Passed' : 'Failed')
-                : null;
+            $remarks = GradingScale::remark($finalGrade);
 
             Grade::updateOrCreate(
                 [

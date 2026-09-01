@@ -196,14 +196,16 @@ class TeacherController extends Controller
     public function storeStudent(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
             'student_id' => ['required', 'string', 'max:255', 'unique:users,student_id'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         User::create([
-            'name' => $validated['name'],
+            'firstname' => $validated['firstname'],
+            'lastname' => $validated['lastname'],
             'student_id' => $validated['student_id'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -391,7 +393,8 @@ class TeacherController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'email', 'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),

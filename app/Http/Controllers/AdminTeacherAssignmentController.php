@@ -37,7 +37,7 @@ class AdminTeacherAssignmentController extends Controller
 
         return view('admin.assignments', [
             'assignments' => $query->get(),
-            'teachers' => User::where('role', 'teacher')->orderBy('name')->get(),
+            'teachers' => User::where('role', 'teacher')->orderBy('lastname')->orderBy('firstname')->get(),
             'subjects' => Subject::where('is_active', true)->orderBy('code')->get(),
             'sections' => Section::where('is_active', true)->orderBy('name')->get(),
             'schoolYears' => SchoolYear::orderBy('name')->get(),
@@ -47,7 +47,7 @@ class AdminTeacherAssignmentController extends Controller
     public function create()
     {
         return view('admin.assignments-create', [
-            'teachers' => User::where('role', 'teacher')->orderBy('name')->get(),
+            'teachers' => User::where('role', 'teacher')->orderBy('lastname')->orderBy('firstname')->get(),
             'subjects' => Subject::where('is_active', true)->orderBy('code')->get(),
             'sections' => Section::where('is_active', true)->orderBy('name')->get(),
             'schoolYears' => SchoolYear::orderBy('name')->get(),
@@ -68,7 +68,7 @@ class AdminTeacherAssignmentController extends Controller
     {
         return view('admin.assignments-edit', [
             'assignment' => $assignment,
-            'teachers' => User::where('role', 'teacher')->orderBy('name')->get(),
+            'teachers' => User::where('role', 'teacher')->orderBy('lastname')->orderBy('firstname')->get(),
             'subjects' => Subject::where('is_active', true)->orderBy('code')->get(),
             'sections' => Section::where('is_active', true)->orderBy('name')->get(),
             'schoolYears' => SchoolYear::orderBy('name')->get(),

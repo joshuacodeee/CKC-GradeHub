@@ -30,7 +30,8 @@ class UserFactory extends Factory
         $role = fake()->randomElement($roles);
 
         return [
-            'name' => fake()->name(),
+            'firstname' => fake()->firstName(),
+            'lastname' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'student_id' => $role === 'student' ? Str::upper(fake()->unique()->bothify('2026-####')) : null,
             'course' => $role === 'student' ? fake()->randomElement($courses) : null,

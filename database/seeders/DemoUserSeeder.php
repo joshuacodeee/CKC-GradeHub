@@ -14,7 +14,8 @@ class DemoUserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@ckcgingoog.edu.ph'],
             [
-                'name' => 'Ramon Villareal',
+                'firstname' => 'Ramon',
+                'lastname' => 'Villareal',
                 'student_id' => null,
                 'course' => null,
                 'year_level' => null,

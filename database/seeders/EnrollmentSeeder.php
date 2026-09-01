@@ -41,25 +41,26 @@ class EnrollmentSeeder extends Seeder
         // A few extra students per section so the teacher grade sheet has
         // something to show.
         $extraStudents = [
-            // (name, email, course, year_level, section)
-            ['Ana Lim',           'ana.lim@ckcgingoog.edu.ph',           'BS Information Technology', '1st Year', $bsit],
-            ['Carlo Mendoza',     'carlo.mendoza@ckcgingoog.edu.ph',     'BS Information Technology', '1st Year', $bsit],
-            ['Diana Cruz',        'diana.cruz@ckcgingoog.edu.ph',        'BS Information Technology', '1st Year', $bsit],
-            ['Eli Navarro',       'eli.navarro@ckcgingoog.edu.ph',       'BS Information Technology', '1st Year', $bsit],
+            // (firstname, lastname, email, course, year_level, section)
+            ['Ana',      'Lim',        'ana.lim@ckcgingoog.edu.ph',       'BS Information Technology', '1st Year', $bsit],
+            ['Carlo',    'Mendoza',    'carlo.mendoza@ckcgingoog.edu.ph', 'BS Information Technology', '1st Year', $bsit],
+            ['Diana',    'Cruz',       'diana.cruz@ckcgingoog.edu.ph',    'BS Information Technology', '1st Year', $bsit],
+            ['Eli',      'Navarro',    'eli.navarro@ckcgingoog.edu.ph',   'BS Information Technology', '1st Year', $bsit],
 
-            ['Rita Aquino',       'rita.aquino@ckcgingoog.edu.ph',       'BS Elementary Education',  '1st Year', $bsed],
-            ['Tito Belmonte',     'tito.belmonte@ckcgingoog.edu.ph',     'BS Elementary Education',  '1st Year', $bsed],
+            ['Rita',     'Aquino',     'rita.aquino@ckcgingoog.edu.ph',   'BS Elementary Education',   '1st Year', $bsed],
+            ['Tito',     'Belmonte',   'tito.belmonte@ckcgingoog.edu.ph', 'BS Elementary Education',   '1st Year', $bsed],
 
-            ['Lara Domingo',      'lara.domingo@ckcgingoog.edu.ph',      'BS Business Administration','1st Year', $bsba],
-            ['Mark Esperanza',    'mark.esperanza@ckcgingoog.edu.ph',    'BS Business Administration','1st Year', $bsba],
+            ['Lara',     'Domingo',    'lara.domingo@ckcgingoog.edu.ph',  'BS Business Administration','1st Year', $bsba],
+            ['Mark',     'Esperanza',  'mark.esperanza@ckcgingoog.edu.ph','BS Business Administration','1st Year', $bsba],
         ];
 
-        foreach ($extraStudents as [$name, $email, $course, $yearLevel, $section]) {
+        foreach ($extraStudents as [$firstname, $lastname, $email, $course, $yearLevel, $section]) {
             if (!$section) continue;
             $user = User::firstOrCreate(
                 ['email' => $email],
                 [
-                    'name' => $name,
+                    'firstname' => $firstname,
+                    'lastname' => $lastname,
                     'student_id' => '2026-' . str_pad((string) random_int(100, 999), 4, '0', STR_PAD_LEFT),
                     'course' => $course,
                     'year_level' => $yearLevel,

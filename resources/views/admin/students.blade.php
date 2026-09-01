@@ -39,7 +39,7 @@
             @forelse ($students as $student)
               <tr>
                 <td style="color:var(--sg-text)">{{ $student->student_id }}</td>
-                <td class="font-medium" style="color:var(--sg-text)">{{ $student->name }}</td>
+                <td class="font-medium" style="color:var(--sg-text)">{{ $student->last_name_first }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->course ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->year_level ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->block ?? '—' }}</td>
@@ -93,9 +93,13 @@
         class="p-6 overflow-y-auto space-y-4">
         @csrf
         <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
-            <input type="text" name="name" required placeholder="e.g. Juan Dela Cruz" class="sg-input">
+          <div>
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
+            <input type="text" name="firstname" required placeholder="e.g. Juan" class="sg-input">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
+            <input type="text" name="lastname" required placeholder="e.g. Dela Cruz" class="sg-input">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>

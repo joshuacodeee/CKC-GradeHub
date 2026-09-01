@@ -298,7 +298,8 @@ class StudentController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'email', 'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),

@@ -40,9 +40,14 @@
           @method('PUT')
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
-              <input type="text" name="name" value="{{ old('name', $userName) }}" required class="sg-input">
-              @error('name') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
+              <input type="text" name="lastname" value="{{ old('lastname', $user?->lastname) }}" required class="sg-input">
+              @error('lastname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
+              <input type="text" name="firstname" value="{{ old('firstname', $user?->firstname) }}" required class="sg-input">
+              @error('firstname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
             </div>
             <div>
               <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>

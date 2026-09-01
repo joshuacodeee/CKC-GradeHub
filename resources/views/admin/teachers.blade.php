@@ -72,8 +72,12 @@
         @csrf
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
-            <input type="text" name="name" required placeholder="e.g. Prof. Andrea Reyes" class="sg-input">
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
+            <input type="text" name="firstname" required placeholder="e.g. Andrea" class="sg-input">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
+            <input type="text" name="lastname" required placeholder="e.g. Reyes" class="sg-input">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email Address</label>

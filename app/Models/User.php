@@ -19,7 +19,8 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'firstname',
+        'lastname',
         'email',
         'phone',
         'student_id',
@@ -61,6 +62,49 @@ class User extends Authenticatable
     public function scopeOfRole($query, string $role)
     {
         return $query->where('role', $role);
+    }
+
+    /**
+     * Convenience accessor: the user's full name built from the separate
+     * firstname and lastname columns. Used by views, sorts, and any
+     * remaining `$user->name` reads.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim(($this->firstname ?? '') . ' ' . ($this->lastname ?? ''));
+    }
+
+    /**
+     * Legacy `name` accessor — returns the same value as full_name. Kept so
+     * any code path that still reads `$user->name` does not break.
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->full_name;
+    }
+
+    /**
+     * Name formatted as "Lastname, Firstname" for use in lists where the
+     * surname is the primary sort key (admin/teacher student tables, etc.).
+     */
+    public function getLastNameFirstAttribute(): string
+    {
+        $firstname = trim((string) ($this->firstname ?? ''));
+        $lastname = trim((string) ($this->lastname ?? ''));
+
+        if ($firstname === '' && $lastname === '') {
+            return '';
+        }
+
+        if ($lastname === '') {
+            return $firstname;
+        }
+
+        if ($firstname === '') {
+            return $lastname;
+        }
+
+        return $lastname . ', ' . $firstname;
     }
 
     // ------------------------------------------------------------------

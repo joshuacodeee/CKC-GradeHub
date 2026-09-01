@@ -24,7 +24,8 @@ class AdminUserController extends Controller
         $blocks = \App\Http\Controllers\Auth\RegisterController::BLOCKS;
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
             'student_id' => ['required', 'string', 'max:255', 'unique:users,student_id'],
             'course' => ['required', 'in:' . implode(',', $courses)],
             'year_level' => ['required', 'in:' . implode(',', $yearLevels)],
@@ -118,7 +119,8 @@ class AdminUserController extends Controller
     public function storeTeacher(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);

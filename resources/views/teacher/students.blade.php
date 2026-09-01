@@ -40,7 +40,7 @@
           @forelse ($students as $student)
             <tr>
               <td style="color:var(--sg-text)">{{ $student->student_id ?? '—' }}</td>
-              <td class="font-medium" style="color:var(--sg-text)">{{ $student->name }}</td>
+              <td class="font-medium" style="color:var(--sg-text)">{{ $student->last_name_first }}</td>
               <td data-col="section" style="color:var(--sg-text-muted)">
                 @foreach ($assignments->pluck('section')->filter()->unique('id') as $section)
                   @if($section->enrollments()->where('student_id', $student->id)->exists())
@@ -59,7 +59,7 @@
               </td>
               <td class="text-right">
                 <a href="{{ route('teacher.grades') }}?student={{ $student->id }}"
-                  class="sg-btn sg-btn-ghost !p-2" title="View grades for {{ $student->name }}">
+                  class="sg-btn sg-btn-ghost !p-2" title="View grades for {{ $student->last_name_first }}">
                   <i data-lucide="external-link" class="w-4 h-4"></i>
                 </a>
               </td>
@@ -95,8 +95,12 @@
       @csrf
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Full Name</label>
-          <input type="text" name="name" required placeholder="e.g. Juan Dela Cruz" class="sg-input">
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
+          <input type="text" name="firstname" required placeholder="e.g. Juan" class="sg-input">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
+          <input type="text" name="lastname" required placeholder="e.g. Dela Cruz" class="sg-input">
         </div>
         <div>
           <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>

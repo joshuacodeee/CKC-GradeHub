@@ -53,18 +53,41 @@
     }
 
     @keyframes auth-float-a {
-      0%, 100% { transform: translateY(0px); }
-      50%      { transform: translateY(-6px); }
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
     }
+
     @keyframes auth-float-b {
-      0%, 100% { transform: translateY(0px); }
-      50%      { transform: translateY(8px); }
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(8px);
+      }
     }
-    .auth-float-a { animation: auth-float-a 6s ease-in-out infinite; }
-    .auth-float-b { animation: auth-float-b 7s ease-in-out infinite; }
+
+    .auth-float-a {
+      animation: auth-float-a 6s ease-in-out infinite;
+    }
+
+    .auth-float-b {
+      animation: auth-float-b 7s ease-in-out infinite;
+    }
 
     input::-ms-reveal,
-    input::-ms-clear { display: none; }
+    input::-ms-clear {
+      display: none;
+    }
   </style>
 </head>
 
@@ -72,20 +95,21 @@
 
   @php
     // Real, live data shared by AppServiceProvider for the auth views.
-    $schoolYearName    = $authSchoolYear?->name ?? 'S.Y. ' . date('Y') . '–' . (date('Y') + 1);
-    $weightedAverage   = $authWeightedAverage !== null ? round((float) $authWeightedAverage, 1) : null;
-    $hasData           = $authGradeCount > 0;
-    $topStudent        = $authTopStudent;
-    $topInitials       = $topStudent
-        ? collect(explode(' ', $topStudent['name']))->filter()->take(2)
-            ->map(fn ($p) => strtoupper(substr($p, 0, 1)))->join('')
-        : null;
+    $schoolYearName = $authSchoolYear?->name ?? 'S.Y. ' . date('Y') . '–' . (date('Y') + 1);
+    $weightedAverage = $authWeightedAverage !== null ? round((float) $authWeightedAverage, 1) : null;
+    $hasData = $authGradeCount > 0;
+    $topStudent = $authTopStudent;
+    $topInitials = $topStudent
+      ? collect(explode(' ', $topStudent['name']))->filter()->take(2)
+        ->map(fn($p) => strtoupper(substr($p, 0, 1)))->join('')
+      : null;
   @endphp
 
   <div class="min-h-screen grid lg:grid-cols-2">
 
     {{-- Left: brand / illustration panel --}}
-    <aside class="hidden lg:flex flex-col justify-between p-12 xl:p-16 relative overflow-hidden auth-panel-bg text-white">
+    <aside
+      class="hidden lg:flex flex-col justify-between p-12 xl:p-16 relative overflow-hidden auth-panel-bg text-white">
 
       <div class="absolute inset-0 auth-grid opacity-40 pointer-events-none"></div>
       <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full opacity-20 pointer-events-none"
@@ -172,7 +196,8 @@
 
           {{-- Floating chip: top student (or general weighted average when no top student) --}}
           @if ($topStudent)
-            <div class="auth-mock-card absolute -right-6 -top-6 rounded-xl px-4 py-3 shadow-xl auth-float-b max-w-[14rem]">
+            <div
+              class="auth-mock-card absolute -right-6 -top-6 rounded-xl px-4 py-3 shadow-xl auth-float-b max-w-[14rem]">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-[11px]"
                   style="background:linear-gradient(140deg,var(--sg-brass-500),var(--sg-brass-600)); color:var(--sg-navy-900)">
@@ -182,7 +207,8 @@
                   <p class="text-xs font-semibold truncate">Top: {{ $topStudent['name'] }}</p>
                   <p class="text-[10px] text-white/50">
                     GWA {{ number_format($topStudent['average'], 1) }} ·
-                    {{ $topStudent['grade_count'] }} {{ \Illuminate\Support\Str::plural('grade', $topStudent['grade_count']) }}
+                    {{ $topStudent['grade_count'] }}
+                    {{ \Illuminate\Support\Str::plural('grade', $topStudent['grade_count']) }}
                   </p>
                 </div>
               </div>
@@ -219,8 +245,7 @@
         <div class="flex items-center justify-between mb-10">
           {{-- Mobile brand --}}
           <div class="lg:hidden flex items-center gap-3">
-            <span
-              class="w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-white"
+            <span class="w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-white"
               style="background:linear-gradient(140deg,var(--sg-navy-700),var(--sg-navy-900))">CKC</span>
             <div class="leading-tight">
               <p class="font-display font-bold text-base" style="color:var(--sg-text)">GradeHub</p>
@@ -237,8 +262,8 @@
 
         {{-- Heading --}}
         <div class="mb-8">
-          <p class="text-xs font-semibold uppercase tracking-[0.22em] mb-2"
-            style="color:var(--sg-brass-600)">Sign in</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.22em] mb-2" style="color:var(--sg-brass-600)">Sign in
+          </p>
           <h2 class="auth-display text-3xl sm:text-4xl font-bold" style="color:var(--sg-text)">
             Welcome back.
           </h2>
@@ -269,8 +294,7 @@
               <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
                 style="color:var(--sg-text-muted)"></i>
               <input type="text" id="login_id" name="login_id" required autocomplete="username"
-                value="{{ old('login_id') }}" placeholder="admin@ckcgingoog.edu.ph"
-                class="sg-input !pl-10 !py-3">
+                value="{{ old('login_id') }}" placeholder="you@ckcgingoog.edu.ph" class="sg-input !pl-10 !py-3">
             </div>
             @error('login_id')
               <p class="mt-1.5 text-xs flex items-center gap-1.5" style="color:var(--sg-danger)">
@@ -284,7 +308,8 @@
               <label for="password" class="block text-sm font-medium" style="color:var(--sg-text)">
                 Password
               </label>
-              <a href="#" class="text-xs font-medium" style="color:var(--sg-navy-600)">Forgot?</a>
+              <a href="{{ route('password.forgot') }}" class="text-xs font-medium"
+                style="color:var(--sg-navy-600)">Forgot?</a>
             </div>
             <div class="relative">
               <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -305,17 +330,14 @@
             @enderror
           </div>
 
-          <label
-            class="flex items-center gap-2.5 text-sm select-none cursor-pointer pt-1"
-            style="color:var(--sg-text)">
+          <label class="flex items-center gap-2.5 text-sm select-none cursor-pointer pt-1" style="color:var(--sg-text)">
             <input type="checkbox" name="remember"
               class="w-4 h-4 rounded border-slate-300 focus:ring-2 focus:ring-offset-0"
               style="accent-color: var(--sg-navy-700)">
             Remember me on this device
           </label>
 
-          <button type="submit" id="login-submit"
-            class="sg-btn sg-btn-primary w-full !py-3 text-sm font-semibold mt-2">
+          <button type="submit" id="login-submit" class="sg-btn sg-btn-primary w-full !py-3 text-sm font-semibold mt-2">
             Sign in to dashboard
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>

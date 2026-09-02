@@ -155,6 +155,9 @@
                     $subject = $row['subject'];
                     $section = $row['section'];
                     $pct = $row['pct'];
+                    $avgEq = $row['average'] !== null
+                        ? \App\Support\GradingScale::equivalent((float) $row['average'])
+                        : null;
                     $status = match (true) {
                         $pct === 100 => ['label' => 'Complete', 'tone' => 'success'],
                         $pct > 0     => ['label' => 'In progress', 'tone' => 'warning'],
@@ -191,6 +194,9 @@
                             {{ $row['submitted'] }}/{{ $row['total'] }} grades
                             @if ($row['average'] !== null)
                                 · Class avg <strong style="color:var(--sg-text)">{{ number_format((float) $row['average'], 2) }}</strong>
+                                <span style="color:var(--sg-navy-700); font-weight:600;">
+                                    ({{ $avgEq !== null ? number_format($avgEq, 1) : '—' }})
+                                </span>
                             @endif
                         </span>
                         <span class="font-semibold" style="color:var(--sg-text)">{{ $pct }}%</span>
@@ -260,7 +266,10 @@
                         @php
                             $initials = collect(explode(' ', $g->studentUser?->name ?? ''))->filter()->take(2)
                                 ->map(fn ($p) => strtoupper(substr($p, 0, 1)))->join('');
-                            $final = $g->final_grade !== null ? number_format((float) $g->final_grade, 2) : '—';
+                            $eq = $g->final_grade !== null
+                                ? \App\Support\GradingScale::equivalent((float) $g->final_grade)
+                                : null;
+                            $finalEq = $eq !== null ? number_format($eq, 1) : '—';
                         @endphp
                         <li class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-xs"
@@ -277,7 +286,7 @@
                                     {{ $g->updated_at?->diffForHumans(null, true, true) }} ago
                                 </p>
                             </div>
-                            <span class="font-display font-bold text-sm" style="color:var(--sg-navy-700)">{{ $final }}</span>
+                            <span class="font-display font-bold text-sm" style="color:var(--sg-navy-700)">{{ $finalEq }}</span>
                         </li>
                     @empty
                         <li class="text-sm text-center py-4" style="color:var(--sg-text-muted)">

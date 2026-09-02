@@ -19,12 +19,16 @@ class AdminProfileController extends Controller
     public function update(Request $request)
     {
         $user = auth()->user();
+        $sexes = \App\Http\Controllers\Auth\RegisterController::SEXES;
 
         $validated = $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
+            'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:32'],
+        ], [
+            'sex.in' => 'Please select a valid sex.',
         ]);
 
         $user->update($validated);

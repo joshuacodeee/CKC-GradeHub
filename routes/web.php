@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AdminCurriculumController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminSectionController;
 use App\Http\Controllers\AdminSettingController;
+use App\Http\Controllers\AdminStudentEnrollmentController;
 use App\Http\Controllers\AdminSubjectController;
 use App\Http\Controllers\AdminTeacherAssignmentController;
 use App\Http\Controllers\AdminUserController;
@@ -48,6 +50,24 @@ Route::middleware('auth')->group(function () {
         // Students
         Route::get('/students', [AdminUserController::class, 'students'])->name('students');
         Route::post('/students', [AdminUserController::class, 'storeStudent'])->name('students.store');
+
+        // Per-student enrollment management (irregular flow)
+        // Note: routes with literal sub-paths are listed before the {offering}
+        // catch-all so the URL `enrollment/{offering}` never shadows them.
+        Route::get('/students/{student}/enrollment', [AdminStudentEnrollmentController::class, 'show'])->name('student-enrollment');
+        Route::post('/students/{student}/enrollment/toggle-irregular', [AdminStudentEnrollmentController::class, 'toggleIrregular'])->name('student-enrollment.toggle-irregular');
+        Route::post('/students/{student}/enrollment/sync', [AdminStudentEnrollmentController::class, 'sync'])->name('student-enrollment.sync');
+        Route::post('/students/{student}/enrollment/assign', [AdminStudentEnrollmentController::class, 'assign'])->name('student-enrollment.assign');
+        Route::get('/students/{student}/enrollment/offerings', [AdminStudentEnrollmentController::class, 'offeringsForSubject'])->name('student-enrollment.offerings');
+        Route::delete('/students/{student}/enrollment/offering/{offering}', [AdminStudentEnrollmentController::class, 'unassign'])->name('student-enrollment.unassign');
+
+        // Curricula
+        Route::get('/curricula', [AdminCurriculumController::class, 'index'])->name('curricula');
+        Route::get('/curricula/create', [AdminCurriculumController::class, 'create'])->name('curricula.create');
+        Route::post('/curricula', [AdminCurriculumController::class, 'store'])->name('curricula.store');
+        Route::get('/curricula/{curriculum}/edit', [AdminCurriculumController::class, 'edit'])->name('curricula.edit');
+        Route::put('/curricula/{curriculum}', [AdminCurriculumController::class, 'update'])->name('curricula.update');
+        Route::delete('/curricula/{curriculum}', [AdminCurriculumController::class, 'destroy'])->name('curricula.destroy');
 
         // Teachers
         Route::get('/teachers', [AdminUserController::class, 'teachers'])->name('teachers');
@@ -105,6 +125,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/grades/{teacherSubject}', [TeacherController::class, 'enterGrades'])->name('grades.enter');
         Route::post('/grades/{teacherSubject}/save', [TeacherController::class, 'saveGrades'])->name('grades.save');
         Route::get('/reports', [TeacherController::class, 'reports'])->name('reports');
+        // Per-class grade report (view + print). The {teacherSubject} routes
+        // live alongside the bare /reports index; Laravel resolves the exact
+        // match first, so the parameterised routes do not shadow it.
+        Route::get('/reports/{teacherSubject}', [TeacherController::class, 'classReport'])->name('reports.show');
+        Route::get('/reports/{teacherSubject}/print', [TeacherController::class, 'classReportPrint'])->name('reports.print');
         Route::get('/profile', [TeacherController::class, 'profile'])->name('profile');
         Route::put('/profile', [TeacherController::class, 'updateProfile'])->name('profile.update');
     });

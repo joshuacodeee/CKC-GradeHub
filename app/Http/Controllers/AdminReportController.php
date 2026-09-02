@@ -28,20 +28,19 @@ class AdminReportController extends Controller
 
         $reportRows = [];
         foreach ($subjects as $subject) {
-            if ($schoolYear) {
-                $teacherSubjects = TeacherSubject::where('subject_id', $subject->id)
-                    ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-                    ->with(['teacher', 'section'])
-                    ->get();
-            } else {
-                $teacherSubjects = TeacherSubject::where('subject_id', $subject->id)
-                    ->with(['teacher', 'section'])
-                    ->get();
-            }
+            $teacherSubjects = TeacherSubject::where('subject_id', $subject->id)
+                ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+                ->with(['teacher', 'section'])
+                ->get();
 
             foreach ($teacherSubjects as $ts) {
-                $enrollmentIds = Enrollment::where('section_id', $ts->section_id)
-                    ->pluck('id');
+                // Guard against teacher_subjects rows that have no section
+                // (data drift / legacy imports) — without a section there is
+                // no roster to report against. Show the row with zero counts
+                // rather than throwing on null section_id.
+                $enrollmentIds = $ts->section_id
+                    ? Enrollment::where('section_id', $ts->section_id)->pluck('id')
+                    : collect();
 
                 $totalStudents = $enrollmentIds->count();
                 $submitted = Grade::whereIn('enrollment_id', $enrollmentIds)
@@ -65,6 +64,9 @@ class AdminReportController extends Controller
                     'teacher' => $ts->teacher?->name ?? '—',
                     'students' => $totalStudents,
                     'avg' => $avgGrade ? round($avgGrade, 2) : '—',
+                    'avg_equivalent' => $avgGrade
+                        ? \App\Support\GradingScale::equivalent((float) $avgGrade)
+                        : null,
                     'submitted' => $submitted,
                     'status' => $status,
                 ];
@@ -89,15 +91,38 @@ class AdminReportController extends Controller
     {
         $assignment->load(['subject', 'section', 'teacher', 'schoolYear']);
 
-        // Students in this section (enrolled only), eager-loading their grade for this assignment.
+        // Source 1: students in the section (legacy path).
         $enrollments = Enrollment::with(['student', 'grade' => function ($q) use ($assignment) {
                 $q->where('teacher_assignment_id', $assignment->id);
             }])
             ->where('section_id', $assignment->section_id)
             ->where('status', 'enrolled')
             ->get()
-            ->sortBy(fn ($e) => $e->student?->name ?? '')
-            ->values();
+            ->keyBy('student_id');
+
+        // Source 2: explicit per-class-offering memberships (irregular
+        // students assigned to this specific offering by a registrar).
+        $explicitStudentIds = \App\Models\ClassOfferingStudent::where('teacher_subject_id', $assignment->id)
+            ->pluck('student_id');
+
+        $explicitStudents = User::whereIn('id', $explicitStudentIds)
+            ->where('role', 'student')
+            ->whereNotIn('id', $enrollments->keys())
+            ->with(['grades' => function ($q) use ($assignment) {
+                $q->where('teacher_assignment_id', $assignment->id);
+            }])
+            ->get();
+
+        foreach ($explicitStudents as $student) {
+            $grade = $student->grades->first();
+            $enrollments->put($student->id, (object) [
+                'student' => $student,
+                'student_id' => $student->id,
+                'grade' => $grade,
+            ]);
+        }
+
+        $enrollments = $enrollments->values()->sortBy(fn ($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))->values();
 
         $gradeRows = $enrollments->map(function (Enrollment $enrollment) use ($assignment) {
             $grade = $enrollment->grade;

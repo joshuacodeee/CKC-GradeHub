@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\SchoolYear;
 use App\Models\Subject;
+use App\Services\EnrollmentSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,7 +47,8 @@ class StudentController extends Controller
 
         // Auto-enroll the student into a matching section if they aren't
         // enrolled yet. Idempotent — runs every page load so existing
-        // students get linked as soon as a section is created.
+        // students get linked as soon as a section is created. Also syncs
+        // the per-class-offering memberships for regular students.
         $this->ensureEnrollment($user, $schoolYear);
 
         $enrollments = Enrollment::where('student_id', $user->id)
@@ -57,28 +59,39 @@ class StudentController extends Controller
 
         $section = $enrollments->first()?->section;
 
-        // All subjects the student should see this term: those that have
-        // a teacher assignment in the student's section (regardless of
-        // whether a grade has been encoded yet). If no school-year-scoped
-        // assignments exist for the section, fall back to any active
-        // assignment for that section — useful when the section was created
-        // without a school year.
-        $teacherSubjectQuery = \App\Models\TeacherSubject::where('section_id', optional($section)->id)
-            ->where('status', 'active');
-        if ($schoolYear) {
-            $teacherSubjectQuery->where(function ($q) use ($schoolYear) {
-                $q->where('school_year_id', $schoolYear->id)
-                    ->orWhereNull('school_year_id');
-            });
-        }
+        // Subjects the student should see come from two sources:
+        //   a) explicit class_offering_student rows (the new per-class
+        //      membership; covers both regular and irregular students)
+        //   b) legacy: every active teacher_subjects row in the section
+        //      (covers any pre-migration student that doesn't yet have
+        //      explicit rows). Skipped for irregular students — they
+        //      only see what the registrar explicitly assigned.
+        $explicitSubjectIds = \App\Models\ClassOfferingStudent::where('student_id', $user->id)
+            ->when($schoolYear, fn ($q) => $q->where('class_offering_student.school_year_id', $schoolYear->id))
+            ->join('teacher_subjects', 'teacher_subjects.id', '=', 'class_offering_student.teacher_subject_id')
+            ->pluck('teacher_subjects.subject_id');
 
-        $subjectIds = $teacherSubjectQuery->pluck('subject_id')->unique();
+        $subjectIds = $explicitSubjectIds->unique();
+
+        if (! $user->is_irregular) {
+            $legacyQuery = \App\Models\TeacherSubject::where('section_id', optional($section)->id)
+                ->where('status', 'active');
+            if ($schoolYear) {
+                $legacyQuery->where(function ($q) use ($schoolYear) {
+                    $q->where('school_year_id', $schoolYear->id)
+                        ->orWhereNull('school_year_id');
+                });
+            }
+            $legacySubjectIds = $legacyQuery->pluck('subject_id');
+            $subjectIds = $subjectIds->merge($legacySubjectIds)->unique()->values();
+        }
 
         $enrolledSubjects = Subject::whereIn('id', $subjectIds)->get();
         $totalUnits = $enrolledSubjects->sum('units');
 
         $grades = Grade::where('student_id', $user->id)
-            ->whereIn('teacher_assignment_id', \App\Models\TeacherSubject::whereIn('subject_id', $subjectIds)->pluck('id'))
+            ->whereIn('teacher_assignment_id',
+                \App\Models\TeacherSubject::whereIn('subject_id', $subjectIds)->pluck('id'))
             ->with(['teacherAssignment.subject', 'subject'])
             ->get();
 
@@ -128,43 +141,24 @@ class StudentController extends Controller
      * create an enrollment. Skips silently if no section matches. Block
      * matching is exact: a student with block "B" only matches a section
      * with block "B".
+     *
+     * Flow:
+     *   • Regular students get their section row synced AND get every
+     *     curriculum offering auto-enrolled.
+     *   • Irregular students get their section row synced (so they remain
+     *     a member of a section for record-keeping), but the per-class
+     *     offering sync is skipped — the registrar is the only one who
+     *     adds them to specific class offerings via "Manage Enrollment".
      */
     protected function ensureEnrollment($user, $schoolYear): void
     {
-        $alreadyEnrolled = Enrollment::where('student_id', $user->id)
-            ->where('status', 'enrolled')
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->exists();
+        $service = app(EnrollmentSyncService::class);
+        $service->syncSectionEnrollment($user, $schoolYear);
 
-        if ($alreadyEnrolled) {
+        if ($user->is_irregular) {
             return;
         }
-
-        $studentBlock = $user->block ?: null;
-
-        $section = \App\Models\Section::query()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->where('course', $user->course)
-            ->where('year_level', $user->year_level)
-            ->when($studentBlock === null, function ($q) {
-                $q->where(function ($q) {
-                    $q->whereNull('block')->orWhere('block', '');
-                });
-            })
-            ->when($studentBlock !== null, fn ($q) => $q->where('block', $studentBlock))
-            ->where('is_active', true)
-            ->first();
-
-        if (! $section) {
-            return;
-        }
-
-        Enrollment::create([
-            'student_id' => $user->id,
-            'section_id' => $section->id,
-            'school_year_id' => $schoolYear?->id,
-            'status' => 'enrolled',
-        ]);
+        $service->addOfferingsFromCurriculum($user, $schoolYear);
     }
 
     public function grades()
@@ -178,7 +172,11 @@ class StudentController extends Controller
 
         $gradeRecords = Grade::where('student_id', $user->id)
             ->where('status', 'submitted')
-            ->with(['teacherAssignment.subject', 'subject'])
+            ->with([
+                'teacherAssignment.subject',
+                'teacherAssignment.teacher',
+                'subject',
+            ])
             ->get();
 
         $gwa = $this->computeGwa($gradeRecords);
@@ -198,28 +196,56 @@ class StudentController extends Controller
 
         $this->ensureEnrollment($user, $schoolYear);
 
-        $enrollments = Enrollment::where('student_id', $user->id)
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->get();
-
-        $sectionIds = $enrollments->pluck('section_id');
-
-        $subjectIds = \App\Models\TeacherSubject::whereIn('section_id', $sectionIds)
-            ->when($schoolYear, function ($q) use ($schoolYear) {
-                $q->where(function ($q) use ($schoolYear) {
-                    $q->where('school_year_id', $schoolYear->id)
-                        ->orWhereNull('school_year_id');
-                });
+        // Source 1: explicit class-offering memberships (covers irregular
+        // students and any explicitly-assigned offerings).
+        $explicitOfferings = \App\Models\TeacherSubject::whereIn('id', function ($q) use ($user, $schoolYear) {
+                $q->select('teacher_subject_id')
+                    ->from('class_offering_student')
+                    ->where('student_id', $user->id)
+                    ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id));
             })
-            ->where('status', 'active')
-            ->pluck('subject_id')
-            ->unique();
+            ->with('subject')
+            ->get()
+            ->keyBy('subject_id');
 
+        // Source 2: legacy — all active offerings in any section the
+        // student is currently enrolled in. **Skipped for irregular
+        // students** — they should only see what the registrar explicitly
+        // assigned via class_offering_student, never the whole section.
+        $offerings = $explicitOfferings;
+        if (! $user->is_irregular) {
+            $sectionIds = Enrollment::where('student_id', $user->id)
+                ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+                ->pluck('section_id');
+
+            $legacyOfferings = \App\Models\TeacherSubject::whereIn('section_id', $sectionIds)
+                ->when($schoolYear, function ($q) use ($schoolYear) {
+                    $q->where(function ($q) use ($schoolYear) {
+                        $q->where('school_year_id', $schoolYear->id)
+                            ->orWhereNull('school_year_id');
+                    });
+                })
+                ->where('status', 'active')
+                ->get()
+                ->keyBy('subject_id');
+
+            $offerings = $offerings->merge($legacyOfferings)->unique('id');
+        }
+
+        $subjectIds = $offerings->pluck('subject_id')->unique();
         $subjects = Subject::whereIn('id', $subjectIds)->get();
         $totalUnits = $subjects->sum('units');
 
+        // Map each subject to the (first) offering that places it on this
+        // student's list. The view uses it to show the class code.
+        $subjectOfferings = $subjects->mapWithKeys(function ($subject) use ($offerings) {
+            $match = $offerings->firstWhere('subject_id', $subject->id);
+            return [$subject->id => $match];
+        });
+
         return view('student.subjects', [
             'subjects' => $subjects,
+            'subjectOfferings' => $subjectOfferings,
             'totalUnits' => $totalUnits,
             'schoolYear' => $schoolYear,
         ]);
@@ -296,15 +322,19 @@ class StudentController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
+        $sexes = \App\Http\Controllers\Auth\RegisterController::SEXES;
 
         $validated = $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
+            'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
             'email' => [
                 'required', 'email', 'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
             ],
             'phone' => ['nullable', 'string', 'max:32'],
+        ], [
+            'sex.in' => 'Please select a valid sex.',
         ]);
 
         $user->update($validated);

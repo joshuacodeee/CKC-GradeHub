@@ -26,7 +26,8 @@
         <select name="subject_id" class="sg-select">
           <option value="">All Subjects</option>
           @foreach($subjects as $s)
-            <option value="{{ $s->id }}" {{ request('subject_id') == $s->id ? 'selected' : '' }}>{{ $s->code }} — {{ $s->name }}</option>
+            <option value="{{ $s->id }}" {{ request('subject_id') == $s->id ? 'selected' : '' }}>{{ $s->code }} —
+              {{ $s->name }}</option>
           @endforeach
         </select>
         <select name="section_id" class="sg-select">
@@ -37,19 +38,20 @@
         </select>
         <select name="semester" class="sg-select">
           <option value="">All Semesters</option>
-          @foreach(['First Semester','Second Semester','Summer'] as $sem)
+          @foreach(['First Semester', 'Second Semester', 'Summer'] as $sem)
             <option value="{{ $sem }}" {{ request('semester') === $sem ? 'selected' : '' }}>{{ $sem }}</option>
           @endforeach
         </select>
         <select name="school_year_id" class="sg-select">
           <option value="">All School Years</option>
           @foreach($schoolYears as $sy)
-            <option value="{{ $sy->id }}" {{ request('school_year_id') == $sy->id ? 'selected' : '' }}>{{ $sy->name }}</option>
+            <option value="{{ $sy->id }}" {{ request('school_year_id') == $sy->id ? 'selected' : '' }}>{{ $sy->name }}
+            </option>
           @endforeach
         </select>
       </form>
 
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto no-print">
         <table class="sg-table" id="assignments-table">
           <thead>
             <tr>
@@ -66,12 +68,14 @@
             @forelse ($assignments as $a)
               <tr>
                 <td class="font-medium" style="color:var(--sg-text)">{{ $a->teacher?->name ?? '—' }}</td>
-                <td style="color:var(--sg-text)">{{ $a->subject?->code ?? '—' }} <span class="text-xs" style="color:var(--sg-text-muted)">{{ $a->subject?->name ?? '' }}</span></td>
+                <td style="color:var(--sg-text)">{{ $a->subject?->code ?? '—' }} <span class="text-xs"
+                    style="color:var(--sg-text-muted)">{{ $a->subject?->name ?? '' }}</span></td>
                 <td style="color:var(--sg-text-muted)">{{ $a->section?->name ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $a->schoolYear?->name ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $a->semester ?? '—' }}</td>
                 <td>
-                  <span class="sg-badge {{ $a->status === 'active' ? 'sg-badge-success' : 'sg-badge-info' }}">{{ ucfirst($a->status ?? 'active') }}</span>
+                  <span
+                    class="sg-badge {{ $a->status === 'active' ? 'sg-badge-success' : 'sg-badge-info' }}">{{ ucfirst($a->status ?? 'active') }}</span>
                 </td>
                 <td class="text-right">
                   <div class="flex justify-end gap-1">
@@ -92,7 +96,8 @@
               </tr>
             @empty
               <tr>
-                <td colspan="7" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher assignments found.</td>
+                <td colspan="7" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher assignments found.
+                </td>
               </tr>
             @endforelse
           </tbody>

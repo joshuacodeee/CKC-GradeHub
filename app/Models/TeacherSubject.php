@@ -12,6 +12,7 @@ class TeacherSubject extends Model
         'section_id',
         'school_year_id',
         'semester',
+        'class_code',
         'status',
     ];
 
@@ -59,6 +60,13 @@ class TeacherSubject extends Model
         return $this->hasMany(Grade::class, 'teacher_assignment_id');
     }
 
+    /**
+     * Backward-compat section-based students. For regular students this
+     * mirrors the explicit class_offering_student rows; for irregulars it
+     * catches the rest of the section who haven't been promoted to a
+     * class offering. Prefer `studentsViaOffering()` when you only need
+     * the explicit ones.
+     */
     public function students()
     {
         return $this->hasManyThrough(
@@ -69,5 +77,25 @@ class TeacherSubject extends Model
             'section_id',
             'student_id'
         )->where('role', 'student');
+    }
+
+    /**
+     * The explicit per-class-offering membership rows. These are the rows
+     * that drive "which students appear in the teacher's grade sheet" once
+     * the new enrollment workflow lands.
+     */
+    public function offeringStudents()
+    {
+        return $this->hasMany(ClassOfferingStudent::class);
+    }
+
+    /**
+     * Students explicitly enrolled in this class offering via the pivot.
+     */
+    public function enrolledStudents()
+    {
+        return $this->belongsToMany(User::class, 'class_offering_student', 'teacher_subject_id', 'student_id')
+            ->withPivot(['school_year_id', 'assigned_by', 'assigned_at'])
+            ->withTimestamps();
     }
 }

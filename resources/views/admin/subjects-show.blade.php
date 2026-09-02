@@ -12,8 +12,10 @@
         </p>
       </div>
       <div class="flex gap-2">
-        <a href="{{ route('admin.subjects.edit', $subject) }}" class="sg-btn sg-btn-outline"><i data-lucide="pencil" class="w-4 h-4"></i> Edit</a>
-        <a href="{{ route('admin.subjects') }}" class="sg-btn sg-btn-ghost"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</a>
+        <a href="{{ route('admin.subjects.edit', $subject) }}" class="sg-btn sg-btn-outline"><i data-lucide="pencil"
+            class="w-4 h-4"></i> Edit</a>
+        <a href="{{ route('admin.subjects') }}" class="sg-btn sg-btn-ghost"><i data-lucide="arrow-left"
+            class="w-4 h-4"></i> Back</a>
       </div>
     </div>
 
@@ -29,7 +31,7 @@
           <i data-lucide="plus" class="w-4 h-4"></i> Assign Teacher
         </a>
       </div>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto no-print">
         <table class="sg-table">
           <thead>
             <tr>
@@ -48,12 +50,14 @@
                 <td style="color:var(--sg-text-muted)">{{ $a->schoolYear?->name ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $a->semester ?? '—' }}</td>
                 <td>
-                  <span class="sg-badge {{ $a->status === 'active' ? 'sg-badge-success' : 'sg-badge-info' }}">{{ ucfirst($a->status) }}</span>
+                  <span
+                    class="sg-badge {{ $a->status === 'active' ? 'sg-badge-success' : 'sg-badge-info' }}">{{ ucfirst($a->status) }}</span>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="text-center py-10" style="color:var(--sg-text-muted)">No teachers assigned to this subject yet.</td>
+                <td colspan="5" class="text-center py-10" style="color:var(--sg-text-muted)">No teachers assigned to this
+                  subject yet.</td>
               </tr>
             @endforelse
           </tbody>

@@ -51,9 +51,21 @@ class TeacherController extends Controller
             ->with(['subject', 'section', 'schoolYear'])
             ->get();
 
+        $assignmentIds = $assignedClasses->pluck('id');
+
         $totalStudents = $assignedClasses->sum(
             fn ($c) => $c->section?->studentCount() ?? 0
         );
+
+        // Add the count of irregular students explicitly assigned to any
+        // of this teacher's class offerings, so the dashboard reflects
+        // the total roster.
+        if ($assignmentIds->isNotEmpty()) {
+            $explicitCount = \App\Models\ClassOfferingStudent::whereIn('teacher_subject_id', $assignmentIds)
+                ->distinct('student_id')
+                ->count('student_id');
+            $totalStudents += (int) $explicitCount;
+        }
 
         $assignmentIds = $assignedClasses->pluck('id');
         $pendingGrades = Grade::whereIn('teacher_assignment_id', $assignmentIds)
@@ -71,8 +83,14 @@ class TeacherController extends Controller
         $classRows = $assignedClasses->map(function ($class) use ($submittedByAssignment) {
             $total = $class->section?->studentCount() ?? 0;
             $row = $submittedByAssignment->get($class->id);
-            $submitted = (int) ($row->submitted_count ?? 0);
-            $avg = $row->avg_grade !== null ? round((float) $row->avg_grade, 2) : null;
+            // `$row` is null when this assignment has zero submitted grades;
+            // the GROUP BY query simply doesn't return a row for it. Treat
+            // that as "nothing submitted" with no average instead of trying
+            // to read a property on null (which was throwing an
+            // "Attempt to read property avg_grade on null" error on every
+            // teacher dashboard load).
+            $submitted = (int) ($row?->submitted_count ?? 0);
+            $avg = isset($row?->avg_grade) ? round((float) $row->avg_grade, 2) : null;
             $pct = $total > 0 ? (int) round(($submitted / $total) * 100) : 0;
             return [
                 'id'        => $class->id,
@@ -178,18 +196,52 @@ class TeacherController extends Controller
             ->with(['section', 'subject'])
             ->get();
 
-        $students = $assignments
+        $sectionStudents = $assignments
             ->map(fn ($a) => $a->section)
             ->filter()
             ->map(fn ($s) => $s->students)
             ->flatten()
+            ->unique('id');
+
+        $assignmentIds = $assignments->pluck('id');
+        $explicitStudents = User::whereIn('id', function ($q) use ($assignmentIds) {
+                $q->select('student_id')->from('class_offering_student')->whereIn('teacher_subject_id', $assignmentIds);
+            })
+            ->where('role', 'student')
+            ->get();
+
+        $students = $sectionStudents
+            ->merge($explicitStudents)
             ->unique('id')
+            ->sortBy(fn ($s) => $s->last_name_first ?: $s->name)
+            ->values();
+
+        // Filter option lists for the table: each value is a string the
+        // client-side filter matches against the corresponding column. We
+        // pull them from the same source data the table renders (the
+        // students' `course` column and the assignments' subject codes)
+        // so the dropdowns are guaranteed to match at least one row.
+        $courseOptions = $students
+            ->pluck('course')
+            ->filter()
+            ->map(fn ($c) => \App\Models\Section::shortCourse((string) $c))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $subjectOptions = $assignments
+            ->pluck('subject.code')
+            ->filter()
+            ->unique()
+            ->sort()
             ->values();
 
         return view('teacher.students', [
             'students' => $students,
             'assignments' => $assignments,
             'schoolYear' => $schoolYear,
+            'courseOptions' => $courseOptions,
+            'subjectOptions' => $subjectOptions,
         ]);
     }
 
@@ -250,8 +302,20 @@ class TeacherController extends Controller
 
     /**
      * Show the grade entry form for a specific assignment.
+     *
+     * Students are pulled from two sources so an irregular student
+     * assigned to this specific class offering (by an admin) appears
+     * here even though they belong to a different section:
+     *   1. Section-level enrollments (the legacy path — keeps pre-existing
+     *      data working without a re-sync).
+     *   2. Explicit class_offering_student rows for this assignment.
+     *
+     * EnrollmentSyncService::ensureDraftGrade() runs whenever a
+     * ClassOfferingStudent row is created, so explicit students will
+     * also have a real enrollment row in the offering's section — we
+     * just need to look it up.
      */
-    public function enterGrades(Request $request, TeacherSubject $teacherSubject)
+    public function enterGrades(TeacherSubject $teacherSubject)
     {
         $user = Auth::user();
 
@@ -262,11 +326,45 @@ class TeacherController extends Controller
 
         $teacherSubject->load(['subject', 'section', 'schoolYear']);
 
-        $enrollments = Enrollment::where('section_id', $teacherSubject->section_id)
+        // Source 1: every enrolled student in the section.
+        $sectionEnrollments = Enrollment::where('section_id', $teacherSubject->section_id)
             ->where('status', 'enrolled')
             ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
             ->with('student')
+            ->get()
+            ->keyBy('student_id');
+
+        // Source 2: explicit per-class-offering memberships — this is how
+        // irregular students reach the right teacher.
+        $explicitStudentIds = \App\Models\ClassOfferingStudent::where('teacher_subject_id', $teacherSubject->id)
+            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->pluck('student_id');
+
+        $explicitStudents = User::whereIn('id', $explicitStudentIds)
+            ->where('role', 'student')
             ->get();
+
+        foreach ($explicitStudents as $student) {
+            if ($sectionEnrollments->has($student->id)) {
+                continue;
+            }
+            // Promote the explicit student into the section map by finding
+            // their existing enrollment (the service creates one when the
+            // class_offering_student row is first added).
+            $enrollment = Enrollment::where('student_id', $student->id)
+                ->where('section_id', $teacherSubject->section_id)
+                ->where('status', 'enrolled')
+                ->first();
+            if ($enrollment) {
+                $enrollment->setRelation('student', $student);
+                $sectionEnrollments->put($student->id, $enrollment);
+            }
+        }
+
+        $enrollments = $sectionEnrollments
+            ->values()
+            ->sortBy(fn ($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))
+            ->values();
 
         // Existing grades keyed by student_id (user id).
         $existingGrades = Grade::where('teacher_assignment_id', $teacherSubject->id)
@@ -367,6 +465,126 @@ class TeacherController extends Controller
         ]);
     }
 
+    /**
+     * Show a detailed per-class grade report for one of the logged-in
+     * teacher's class offerings. Mirrors AdminReportController::show
+     * but is scoped to the teacher's own assignments and has a
+     * dedicated printable variant (see classReportPrint()).
+     */
+    public function classReport(TeacherSubject $teacherSubject)
+    {
+        $user = Auth::user();
+
+        // Spec §40: a teacher must never access another teacher's assignment.
+        abort_unless($teacherSubject->teacher_id === $user->id, 403);
+
+        $data = $this->buildClassReportData($teacherSubject);
+
+        return view('teacher.reports-show', $data);
+    }
+
+    /**
+     * Print-only variant of the per-class report. Bypasses the app
+     * shell so the browser's print preview shows just the report —
+     * institutional header + grade matrix — with no sidebar/navbar.
+     */
+    public function classReportPrint(TeacherSubject $teacherSubject)
+    {
+        $user = Auth::user();
+        abort_unless($teacherSubject->teacher_id === $user->id, 403);
+
+        $data = $this->buildClassReportData($teacherSubject);
+
+        return view('teacher.reports-print', $data);
+    }
+
+    /**
+     * Build the data array shared by classReport() and classReportPrint().
+     * Two student sources are merged so an irregular student explicitly
+     * assigned to this specific class offering appears in the matrix
+     * even though they belong to a different section.
+     */
+    protected function buildClassReportData(TeacherSubject $teacherSubject): array
+    {
+        $teacherSubject->load(['subject', 'section', 'teacher', 'schoolYear']);
+
+        // Source 1: students in the section (legacy path).
+        $enrollments = Enrollment::with(['student', 'grade' => function ($q) use ($teacherSubject) {
+                $q->where('teacher_assignment_id', $teacherSubject->id);
+            }])
+            ->where('section_id', $teacherSubject->section_id)
+            ->where('status', 'enrolled')
+            ->get()
+            ->keyBy('student_id');
+
+        // Source 2: explicit per-class-offering memberships (irregular
+        // students assigned to this specific offering by a registrar).
+        $explicitStudentIds = \App\Models\ClassOfferingStudent::where('teacher_subject_id', $teacherSubject->id)
+            ->pluck('student_id');
+
+        $explicitStudents = User::whereIn('id', $explicitStudentIds)
+            ->where('role', 'student')
+            ->whereNotIn('id', $enrollments->keys())
+            ->with(['grades' => function ($q) use ($teacherSubject) {
+                $q->where('teacher_assignment_id', $teacherSubject->id);
+            }])
+            ->get();
+
+        foreach ($explicitStudents as $student) {
+            $grade = $student->grades->first();
+            $enrollments->put($student->id, (object) [
+                'student' => $student,
+                'student_id' => $student->id,
+                'grade' => $grade,
+            ]);
+        }
+
+        $enrollments = $enrollments->values()->sortBy(fn ($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))->values();
+
+        $gradeRows = $enrollments->map(function ($enrollment) use ($teacherSubject) {
+            $grade = $enrollment->grade;
+            $student = $enrollment->student;
+            return [
+                'student_id'   => $enrollment->student_id,
+                'student_name' => $student?->last_name_first ?: ($student?->name ?? '—'),
+                'student_no'   => $student?->student_id ?? '—',
+                'course'       => $student?->short_course_name,
+                'year_level'   => $student?->year_level,
+                'block'        => $student?->block,
+                'prelim'       => $grade?->prelim,
+                'midterm'      => $grade?->midterm,
+                'final'        => $grade?->final,
+                'final_grade'  => $grade?->final_grade,
+                'remarks'      => $grade?->remarks,
+                'status'       => $grade?->status,
+                'submitted_at' => $grade?->submitted_at,
+            ];
+        });
+
+        $submittedCount = $gradeRows->where('status', 'submitted')->count();
+        $gradedCount    = $gradeRows->filter(fn ($r) => $r['final_grade'] !== null)->count();
+        $classAverage   = $gradeRows->filter(fn ($r) => $r['final_grade'] !== null)
+            ->avg(fn ($r) => (float) $r['final_grade']);
+
+        $distribution = [
+            '90-100'    => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 90 && $r['final_grade'] <= 100)->count(),
+            '85-89'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 85 && $r['final_grade'] < 90)->count(),
+            '80-84'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 80 && $r['final_grade'] < 85)->count(),
+            '75-79'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 75 && $r['final_grade'] < 80)->count(),
+            'Below 75'  => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] < 75)->count(),
+        ];
+
+        return [
+            'assignment'      => $teacherSubject,
+            'gradeRows'       => $gradeRows,
+            'totalStudents'   => $gradeRows->count(),
+            'submittedCount'  => $submittedCount,
+            'gradedCount'     => $gradedCount,
+            'classAverage'    => $classAverage !== null ? round((float) $classAverage, 2) : null,
+            'distribution'    => $distribution,
+        ];
+    }
+
     public function profile()
     {
         $user = Auth::user();
@@ -391,15 +609,19 @@ class TeacherController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
+        $sexes = \App\Http\Controllers\Auth\RegisterController::SEXES;
 
         $validated = $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
+            'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
             'email' => [
                 'required', 'email', 'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
             ],
             'phone' => ['nullable', 'string', 'max:32'],
+        ], [
+            'sex.in' => 'Please select a valid sex.',
         ]);
 
         $user->update($validated);

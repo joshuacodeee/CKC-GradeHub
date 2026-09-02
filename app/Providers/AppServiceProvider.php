@@ -28,7 +28,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Share dynamic notifications with the global navbar.
+        // Share dynamic notifications with the global navbar. The
+        // composer receives an Illuminate\View\View instance, NOT the
+        // View facade — using the wrong type-hint here produced an
+        // "Argument #1 ($view) must be of type
+        // Illuminate\Support\Facades\View, Illuminate\View\View given"
+        // error on every page that included components.navbar.
         View::composer('components.navbar', function (ViewInstance $view) {
             $user = auth()->user();
             $notifications = collect();

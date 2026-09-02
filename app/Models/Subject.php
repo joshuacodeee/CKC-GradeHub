@@ -41,4 +41,11 @@ class Subject extends Model
     {
         return $this->belongsToMany(Section::class, 'teacher_subjects', 'subject_id', 'section_id');
     }
+
+    public function curricula()
+    {
+        return $this->belongsToMany(Curriculum::class, 'curriculum_subjects', 'subject_id', 'curriculum_id')
+            ->withPivot('year_level')
+            ->withTimestamps();
+    }
 }

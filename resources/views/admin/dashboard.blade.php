@@ -201,7 +201,10 @@
                     $subjectCode = $grade->subject?->code ?? '—';
                     $subjectName = $grade->subject?->name ?? '';
                     $teacherName = $grade->teacher?->name ?? '—';
-                    $finalGrade  = $grade->final_grade !== null ? number_format((float) $grade->final_grade, 2) : '—';
+                    $eq = $grade->final_grade !== null
+                        ? \App\Support\GradingScale::equivalent((float) $grade->final_grade)
+                        : null;
+                    $finalEq = $eq !== null ? number_format($eq, 1) : '—';
                     $submittedAt = $grade->submitted_at ?? $grade->updated_at;
                     $remarks = $grade->remarks;
                     $gradeTone = match (strtolower((string) $remarks)) {
@@ -229,7 +232,7 @@
                         </p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="font-display font-bold text-lg" style="color:var(--sg-navy-700)">{{ $finalGrade }}</p>
+                        <p class="font-display font-bold text-lg" style="color:var(--sg-navy-700)">{{ $finalEq }}</p>
                         @if ($remarks)
                             <span class="sg-badge sg-badge-{{ $gradeTone }} !text-[10px] !py-0.5">{{ ucfirst($remarks) }}</span>
                         @endif

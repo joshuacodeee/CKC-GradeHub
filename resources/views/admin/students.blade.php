@@ -30,7 +30,7 @@
               <th class="cursor-pointer" data-sort-column>Course</th>
               <th class="cursor-pointer" data-sort-column>Year Level</th>
               <th class="cursor-pointer" data-sort-column>Block</th>
-              <th class="cursor-pointer" data-sort-column>Section</th>
+              <th class="cursor-pointer" data-sort-column>Standing</th>
               <th class="cursor-pointer" data-sort-column>Status</th>
               <th class="text-right">Actions</th>
             </tr>
@@ -43,11 +43,21 @@
                 <td style="color:var(--sg-text-muted)">{{ $student->course ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->year_level ?? '—' }}</td>
                 <td style="color:var(--sg-text-muted)">{{ $student->block ?? '—' }}</td>
-                <td style="color:var(--sg-text-muted)">—</td>
+                <td>
+                  @if($student->is_irregular)
+                    <span class="sg-badge sg-badge-warning">Irregular</span>
+                  @else
+                    <span class="sg-badge sg-badge-info">Regular</span>
+                  @endif
+                </td>
                 <td><span
                     class="sg-badge {{ $student->is_active ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $student->is_active ? 'Active' : 'Inactive' }}</span>
                 </td>
-                <td class="text-right" style="color:var(--sg-text-muted)">{{ $student->email }}</td>
+                <td class="text-right">
+                  <a href="{{ route('admin.student-enrollment', $student) }}" class="sg-btn sg-btn-outline !text-xs !px-2 !py-1">
+                    <i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Manage Enrollment
+                  </a>
+                </td>
               </tr>
             @empty
               <tr>

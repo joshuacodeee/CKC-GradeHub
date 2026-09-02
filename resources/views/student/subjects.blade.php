@@ -10,12 +10,20 @@
   </div>
 
   @forelse ($subjects as $subject)
+  @php $offering = $subjectOfferings[$subject->id] ?? null; @endphp
   <div class="sg-card p-5">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0">
         <h3 class="font-display font-semibold text-lg" style="color:var(--sg-text)">{{ $subject->code }}</h3>
         <p class="text-sm" style="color:var(--sg-text-muted)">{{ $subject->name }}</p>
         <p class="text-xs mt-1" style="color:var(--sg-text-muted)">{{ $subject->units }} unit(s)</p>
+        @if($offering)
+          <div class="mt-2 flex items-center gap-2 flex-wrap">
+            <span class="text-xs" style="color:var(--sg-text-muted)">
+              {{ $offering->section?->name ?? '' }} · {{ $offering->section?->year_level ?? '' }}
+            </span>
+          </div>
+        @endif
       </div>
       <span class="sg-badge sg-badge-info">{{ $subject->units }} units</span>
     </div>

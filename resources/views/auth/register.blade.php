@@ -359,6 +359,28 @@
                                     @enderror
                                 </div>
                                 <div>
+                                    <label for="middlename" class="block text-sm font-medium mb-1.5"
+                                        style="color:var(--sg-text)">
+                                        Middle name
+                                        <span class="font-normal ml-1" style="color:var(--sg-text-muted)">(optional)</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i data-lucide="user"
+                                            class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                                            style="color:var(--sg-text-muted)"></i>
+                                        <input id="middlename" name="middlename" value="{{ old('middlename') }}"
+                                            autocomplete="additional-name"
+                                            class="sg-input !pl-10 !py-2.5" placeholder="Santos">
+                                    </div>
+                                    @error('middlename')
+                                        <p class="mt-1.5 text-xs flex items-center gap-1.5" style="color:var(--sg-danger)">
+                                            <i data-lucide="circle-alert" class="w-3.5 h-3.5"></i>{{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
                                     <label for="lastname" class="block text-sm font-medium mb-1.5"
                                         style="color:var(--sg-text)">Last name</label>
                                     <div class="relative">
@@ -370,6 +392,28 @@
                                             class="sg-input !pl-10 !py-2.5" placeholder="Dela Cruz">
                                     </div>
                                     @error('lastname')
+                                        <p class="mt-1.5 text-xs flex items-center gap-1.5" style="color:var(--sg-danger)">
+                                            <i data-lucide="circle-alert" class="w-3.5 h-3.5"></i>{{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <span class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Sex</span>
+                                    <div class="flex items-center gap-4 h-[42px]">
+                                        <label class="inline-flex items-center gap-2 text-sm cursor-pointer"
+                                            style="color:var(--sg-text)">
+                                            <input type="radio" name="sex" value="Male"
+                                                @checked(old('sex') === 'Male') required>
+                                            Male
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm cursor-pointer"
+                                            style="color:var(--sg-text)">
+                                            <input type="radio" name="sex" value="Female"
+                                                @checked(old('sex') === 'Female')>
+                                            Female
+                                        </label>
+                                    </div>
+                                    @error('sex')
                                         <p class="mt-1.5 text-xs flex items-center gap-1.5" style="color:var(--sg-danger)">
                                             <i data-lucide="circle-alert" class="w-3.5 h-3.5"></i>{{ $message }}
                                         </p>
@@ -501,6 +545,27 @@
                                     @enderror
                                 </div>
                             </div>
+
+                            {{-- Irregular student toggle --}}
+                            <label class="flex items-start gap-3 px-4 py-3 rounded-lg border cursor-pointer"
+                                style="border-color:var(--sg-border)">
+                                <input type="checkbox" name="is_irregular" value="1"
+                                    @checked(old('is_irregular')) class="mt-0.5">
+                                <div>
+                                    <p class="text-sm font-medium" style="color:var(--sg-text)">
+                                        I am an irregular student
+                                    </p>
+                                    <p class="text-xs mt-0.5" style="color:var(--sg-text-muted)">
+                                        Tick this if you are taking subjects from a different year level or section.
+                                        The Registrar will review your missing subjects and assign you to the right class.
+                                    </p>
+                                </div>
+                            </label>
+                            @error('is_irregular')
+                                <p class="text-xs flex items-center gap-1.5" style="color:var(--sg-danger)">
+                                    <i data-lucide="circle-alert" class="w-3.5 h-3.5"></i>{{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </fieldset>
 

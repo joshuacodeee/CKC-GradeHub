@@ -6,7 +6,9 @@ use App\Models\Enrollment;
 use App\Models\Section;
 use App\Models\SchoolYear;
 use App\Models\User;
+use App\Services\EnrollmentSyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminSectionController extends Controller
 {
@@ -115,10 +117,17 @@ class AdminSectionController extends Controller
      * students with block "B". A section without a block only matches
      * students without a block. This keeps "BSIT 4" and "BSIT 4-B" from
      * sharing the same student pool.
+     *
+     * Delegates the actual sync to EnrollmentSyncService so per-class
+     * offerings are kept in step at the same time.
      */
     protected function syncEnrollments(Section $section): int
     {
-        $schoolYearId = $section->school_year_id;
+        $service = app(EnrollmentSyncService::class);
+        $schoolYear = $section->school_year_id
+            ? SchoolYear::find($section->school_year_id)
+            : $service->currentSchoolYear();
+
         $sectionBlock = $section->block ?: null;
 
         $query = User::query()
@@ -135,27 +144,24 @@ class AdminSectionController extends Controller
             $query->where('block', $sectionBlock);
         }
 
-        $candidates = $query->pluck('id');
+        $candidates = $query->get();
 
-        if ($candidates->isEmpty()) {
-            return 0;
+        $count = 0;
+        foreach ($candidates as $student) {
+            $before = Enrollment::where('student_id', $student->id)
+                ->where('section_id', $section->id)
+                ->where('status', 'enrolled')
+                ->exists();
+            $service->syncForStudent($student, $schoolYear, Auth::user());
+            $after = Enrollment::where('student_id', $student->id)
+                ->where('section_id', $section->id)
+                ->where('status', 'enrolled')
+                ->exists();
+            if ($after && ! $before) {
+                $count++;
+            }
         }
 
-        $alreadyEnrolledIds = Enrollment::where('section_id', $section->id)
-            ->whereIn('student_id', $candidates)
-            ->pluck('student_id');
-
-        $toEnroll = $candidates->diff($alreadyEnrolledIds);
-
-        foreach ($toEnroll as $studentId) {
-            Enrollment::create([
-                'student_id' => $studentId,
-                'section_id' => $section->id,
-                'school_year_id' => $schoolYearId,
-                'status' => 'enrolled',
-            ]);
-        }
-
-        return $toEnroll->count();
+        return $count;
     }
 }

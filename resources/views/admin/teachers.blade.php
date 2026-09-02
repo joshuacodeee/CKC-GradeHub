@@ -76,8 +76,30 @@
             <input type="text" name="firstname" required placeholder="e.g. Andrea" class="sg-input">
           </div>
           <div>
+            <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">
+              Middle Name <span class="text-xs" style="color:var(--sg-text-muted)">(optional)</span>
+            </label>
+            <input type="text" name="middlename" placeholder="e.g. Cruz" class="sg-input">
+          </div>
+          <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
             <input type="text" name="lastname" required placeholder="e.g. Reyes" class="sg-input">
+          </div>
+          <div>
+            <span class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Sex</span>
+            <div class="flex items-center gap-4">
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color:var(--sg-text)">
+                <input type="radio" name="sex" value="Male" required>
+                Male
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color:var(--sg-text)">
+                <input type="radio" name="sex" value="Female">
+                Female
+              </label>
+            </div>
+            @error('sex')
+              <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p>
+            @enderror
           </div>
           <div>
             <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email Address</label>

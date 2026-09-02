@@ -29,6 +29,8 @@
         </p>
         <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="phone" class="w-4 h-4"></i>
           {{ $user?->phone ?: 'No phone on file' }}</p>
+        <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="user-round" class="w-4 h-4"></i>
+          Sex: <span style="color:var(--sg-text)">{{ $user?->sex ?: '—' }}</span></p>
       </div>
     </div>
 
@@ -52,6 +54,20 @@
             <div>
               <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>
               <input type="text" value="{{ $studentID }}" class="sg-input" disabled>
+            </div>
+            <div>
+              <span class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Sex</span>
+              <div class="flex items-center gap-4 h-[42px]">
+                <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color:var(--sg-text)">
+                  <input type="radio" name="sex" value="Male" @checked(old('sex', $user?->sex) === 'Male')>
+                  Male
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm cursor-pointer" style="color:var(--sg-text)">
+                  <input type="radio" name="sex" value="Female" @checked(old('sex', $user?->sex) === 'Female')>
+                  Female
+                </label>
+              </div>
+              @error('sex') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
             </div>
             <div class="col-span-2">
               <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>

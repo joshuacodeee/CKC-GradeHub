@@ -23,6 +23,9 @@
           {{ $sub->submitted_count }}/{{ $sub->total_students }} students submitted
           @if($sub->avg_grade)
             · Average: {{ round($sub->avg_grade, 2) }}
+            <span style="color:var(--sg-navy-700); font-weight:600;">
+              ({{ number_format(\App\Support\GradingScale::equivalent((float) $sub->avg_grade), 1) }})
+            </span>
           @endif
         </p>
       </div>
@@ -34,8 +37,9 @@
         @else
           <span class="sg-badge sg-badge-info">{{ $sub->status }}</span>
         @endif
-        <a href="{{ route('teacher.grades') }}" class="sg-btn sg-btn-ghost !p-2" title="View grades">
-          <i data-lucide="external-link" class="w-4 h-4"></i>
+        <a href="{{ route('teacher.reports.show', $sub) }}"
+          class="sg-btn sg-btn-outline !text-xs !px-2 !py-1" title="View grade report">
+          <i data-lucide="file-bar-chart-2" class="w-3.5 h-3.5"></i> View Report
         </a>
       </div>
     </div>

@@ -6,6 +6,7 @@
       ['label' => 'Teachers', 'icon' => 'graduation-cap', 'route' => 'admin.teachers', 'key' => 'teachers'],
       ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'admin.subjects', 'key' => 'subjects'],
       ['label' => 'Sections', 'icon' => 'layers', 'route' => 'admin.sections', 'key' => 'sections'],
+      ['label' => 'Curricula', 'icon' => 'list-tree', 'route' => 'admin.curricula', 'key' => 'curricula'],
       ['label' => 'School Years', 'icon' => 'calendar-range', 'route' => 'admin.settings', 'key' => 'school-years'],
       ['label' => 'Teacher Assignments', 'icon' => 'user-check', 'route' => 'admin.assignments', 'key' => 'assignments'],
       ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'admin.reports', 'key' => 'reports'],

@@ -32,7 +32,7 @@
               <th>Subject</th>
               <th>Section</th>
               <th>Teacher</th>
-              <th># Students</th>
+              <th>Students</th>
               <th>Class Average</th>
               <th>Status</th>
               <th class="text-right no-print">Action</th>

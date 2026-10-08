@@ -88,7 +88,7 @@ SIDEBAR
                     w-10
                     h-10
                     flex-shrink-0
-                    rounded-lg
+                    rounded-full
                     overflow-hidden
                     bg-white
                     flex
@@ -96,9 +96,9 @@ SIDEBAR
                     justify-center
                 ">
 
-        @if(file_exists(public_path('images/ckc-logo.png')))
+        @if(file_exists(public_path('logo/gradehub.jpg')))
 
-          <img src="{{ asset('images/ckc-logo.png') }}" alt="Christ the King College" class="w-8 h-8 object-contain">
+          <img src="{{ asset('logo/gradehub.jpg') }}" alt="Christ the King College" class="w-12 h-12 object-contain rounded-full">
 
         @else
 

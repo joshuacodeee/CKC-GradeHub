@@ -118,9 +118,7 @@
         style="background: var(--sg-navy-500); filter: blur(40px);"></div>
 
       <a href="{{ route('landing') }}" class="relative flex items-center gap-3 group">
-        <span
-          class="w-12 h-12 rounded-xl flex items-center justify-center font-display font-bold text-white tracking-wider"
-          style="background:linear-gradient(140deg,var(--sg-navy-700),var(--sg-navy-900)); border:1px solid rgba(255,255,255,0.10)">CKC</span>
+        <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-14 h-14 object-contain rounded-full border border-white/10">
         <span class="leading-tight">
           <strong class="font-display block text-base">GradeHub</strong>
           <small class="text-xs text-white/60">Christ the King College</small>
@@ -245,8 +243,7 @@
         <div class="flex items-center justify-between mb-10">
           {{-- Mobile brand --}}
           <div class="lg:hidden flex items-center gap-3">
-            <span class="w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-white"
-              style="background:linear-gradient(140deg,var(--sg-navy-700),var(--sg-navy-900))">CKC</span>
+            <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-14 h-14 object-contain rounded-full border border-white/10">
             <div class="leading-tight">
               <p class="font-display font-bold text-base" style="color:var(--sg-text)">GradeHub</p>
               <p class="text-xs" style="color:var(--sg-text-muted)">Christ the King College</p>

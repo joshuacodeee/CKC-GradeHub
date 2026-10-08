@@ -62,9 +62,7 @@
     <header class="relative z-10">
         <div class="max-w-7xl mx-auto px-6 lg:px-10 py-6 flex items-center justify-between">
             <a href="{{ route('landing') }}" class="flex items-center gap-3 group">
-                <span
-                    class="w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-white tracking-wider"
-                    style="background:linear-gradient(140deg,var(--sg-navy-700),var(--sg-navy-900))">CKC</span>
+                <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-14 h-14 object-contain rounded-full border border-white/10">
                 <span class="leading-tight">
                     <strong class="font-display block text-base">GradeHub</strong>
                     <small class="text-xs" style="color:var(--sg-text-muted)">Christ the King College</small>

@@ -53,16 +53,38 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium mb-2" style="color:var(--sg-text)">Subjects in this curriculum</label>
-      <div class="space-y-2 max-h-96 overflow-y-auto sg-card p-3">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <label class="block text-sm font-medium" style="color:var(--sg-text)">Subjects in this curriculum</label>
+        <button type="button" id="toggle-all-btn" class="text-xs font-medium underline" style="color:var(--sg-text-muted)">
+          Select All
+        </button>
+      </div>
+
+      {{-- Search Bar Input --}}
+      <div class="relative mb-2">
+        <input 
+          type="text" 
+          id="subject-search-input" 
+          placeholder="Search subject code or name..." 
+          class="sg-select text-sm pl-9"
+        >
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--sg-text-muted)"></i>
+      </div>
+
+      {{-- Checkbox List Container --}}
+      <div id="subject-list" class="space-y-2 max-h-96 overflow-y-auto sg-card p-3">
         @foreach ($subjects as $subject)
-          <label class="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-slate-50">
+          <label class="subject-item flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer" data-search="{{ strtolower($subject->code . ' ' . $subject->name) }}">
             <input type="checkbox" name="subjects[{{ $subject->id }}][selected]" value="1" class="subject-toggle">
             <span class="font-medium text-sm" style="color:var(--sg-text)">{{ $subject->code }}</span>
             <span class="text-sm" style="color:var(--sg-text-muted)">{{ $subject->name }}</span>
             <span class="ml-auto text-xs" style="color:var(--sg-text-muted)">{{ $subject->units }}u</span>
           </label>
         @endforeach
+
+        <div id="no-subjects-found" class="hidden text-center py-4 text-sm" style="color:var(--sg-text-muted)">
+          No subjects found matching your search.
+        </div>
       </div>
       <p class="text-xs mt-2" style="color:var(--sg-text-muted)">Tick each subject that a regular student in this curriculum should take.</p>
     </div>
@@ -76,3 +98,53 @@
   </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('subject-search-input');
+    const subjectItems = document.querySelectorAll('.subject-item');
+    const noResults = document.getElementById('no-subjects-found');
+    const toggleAllBtn = document.getElementById('toggle-all-btn');
+
+    // Real-time filtering function
+    searchInput.addEventListener('input', function () {
+      const query = this.value.toLowerCase().trim();
+      let visibleCount = 0;
+
+      subjectItems.forEach(item => {
+        const searchText = item.getAttribute('data-search');
+        if (searchText.includes(query)) {
+          item.classList.remove('hidden');
+          item.classList.add('flex');
+          visibleCount++;
+        } else {
+          item.classList.add('hidden');
+          item.classList.remove('flex');
+        }
+      });
+
+      if (visibleCount === 0) {
+        noResults.classList.remove('hidden');
+      } else {
+        noResults.classList.add('hidden');
+      }
+    });
+
+    // Toggle All / Deselect All functionality for visible subjects
+    toggleAllBtn.addEventListener('click', function () {
+      const visibleCheckboxes = Array.from(subjectItems)
+        .filter(item => !item.classList.contains('hidden'))
+        .map(item => item.querySelector('.subject-toggle'));
+
+      const allChecked = visibleCheckboxes.every(cb => cb.checked);
+
+      visibleCheckboxes.forEach(cb => {
+        cb.checked = !allChecked;
+      });
+
+      this.textContent = allChecked ? 'Select All' : 'Deselect All';
+    });
+  });
+</script>
+@endpush

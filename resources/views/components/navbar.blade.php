@@ -65,6 +65,7 @@
             Mark all read
           </button>
         </div>
+        <p data-notif-status class="hidden px-3 pb-2 text-xs" role="status" aria-live="polite"></p>
 
         @forelse ($navbarNotifications as $notif)
           @php
@@ -155,6 +156,14 @@
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const badge = root.querySelector('[data-notif-badge]');
         const markAllBtn = root.querySelector('[data-notif-mark-all]');
+        const status = root.querySelector('[data-notif-status]');
+
+        const showStatus = (message, isError = false) => {
+          if (!status) return;
+          status.textContent = message;
+          status.style.color = isError ? 'var(--sg-danger)' : 'var(--sg-success)';
+          status.classList.toggle('hidden', !message);
+        };
 
         const refreshBadge = () => {
           const unread = root.querySelectorAll('.notif-item[data-notif-read="0"]').length;
@@ -181,23 +190,32 @@
           }
         };
 
-        const postJson = (url, body) => fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(body || {}),
-          credentials: 'same-origin',
-        });
+        const postJson = async (url, body) => {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(body || {}),
+            credentials: 'same-origin',
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Could not update notifications.');
+          }
+          return data;
+        };
 
-        const markOne = (id) => {
+        const markOne = async (id) => {
           const item = root.querySelector(`.notif-item[data-notif-id="${CSS.escape(id)}"]`);
           if (!item || item.dataset.notifRead === '1') return;
-          postJson('{{ route('notifications.read') }}', { id }).then((r) => r.json()).then((data) => {
-            if (!data.ok) return;
+          const button = item.querySelector('[data-notif-mark]');
+          if (button) button.disabled = true;
+          try {
+            await postJson('{{ route('notifications.read') }}', { id });
             item.dataset.notifRead = '1';
             const text = item.querySelector('.min-w-0');
             if (text) text.classList.add('opacity-60');
@@ -206,7 +224,12 @@
             const btn = item.querySelector('[data-notif-mark]');
             if (btn) btn.remove();
             refreshBadge();
-          }).catch(() => {});
+            showStatus('Notification marked as read.');
+          } catch (error) {
+            console.error('Failed to mark notification as read.', error);
+            showStatus('Could not mark the notification as read. Please try again.', true);
+            if (button?.isConnected) button.disabled = false;
+          }
         };
 
         root.addEventListener('click', (e) => {
@@ -220,14 +243,16 @@
         });
 
         if (markAllBtn) {
-          markAllBtn.addEventListener('click', (e) => {
+          markAllBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const items = root.querySelectorAll('.notif-item[data-notif-read="0"]');
             if (items.length === 0) return;
             const ids = Array.from(items).map((el) => el.dataset.notifId);
-            postJson('{{ route('notifications.read-all') }}', { ids }).then((r) => r.json()).then((data) => {
-              if (!data.ok) return;
+            markAllBtn.disabled = true;
+            showStatus('');
+            try {
+              await postJson('{{ route('notifications.read-all') }}', { ids });
               items.forEach((el) => {
                 el.dataset.notifRead = '1';
                 const text = el.querySelector('.min-w-0');
@@ -238,7 +263,12 @@
                 if (btn) btn.remove();
               });
               refreshBadge();
-            }).catch(() => {});
+              showStatus('All notifications marked as read.');
+            } catch (error) {
+              console.error('Failed to mark all notifications as read.', error);
+              showStatus('Could not mark notifications as read. Please try again.', true);
+              markAllBtn.disabled = false;
+            }
           });
         }
       })();

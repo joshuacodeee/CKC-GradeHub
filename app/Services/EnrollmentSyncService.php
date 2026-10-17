@@ -56,7 +56,7 @@ class EnrollmentSyncService
             'semester' => $schoolYear?->semester,
         ];
 
-        if (! $student->is_active || $student->role !== 'student') {
+        if (!$student->is_active || $student->role !== 'student') {
             return $result;
         }
 
@@ -88,7 +88,7 @@ class EnrollmentSyncService
     {
         $currentEnrollment = Enrollment::where('student_id', $student->id)
             ->where('status', 'enrolled')
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->first();
 
         $targetSection = $this->findSectionForStudent($student, $schoolYear);
@@ -98,7 +98,7 @@ class EnrollmentSyncService
             return false;
         }
 
-        if ($currentEnrollment && (! $targetSection || $currentEnrollment->section_id !== $targetSection->id)) {
+        if ($currentEnrollment && (!$targetSection || $currentEnrollment->section_id !== $targetSection->id)) {
             $currentEnrollment->update(['status' => 'dropped']);
         }
 
@@ -107,7 +107,7 @@ class EnrollmentSyncService
                 ->where('section_id', $targetSection->id)
                 ->where('status', 'enrolled')
                 ->exists();
-            if (! $already) {
+            if (!$already) {
                 Enrollment::create([
                     'student_id' => $student->id,
                     'section_id' => $targetSection->id,
@@ -130,7 +130,7 @@ class EnrollmentSyncService
         $studentBlock = $student->block ?: null;
 
         return Section::query()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('course', $student->course)
             ->where('year_level', $student->year_level)
             ->when($studentBlock === null, function ($q) {
@@ -138,7 +138,7 @@ class EnrollmentSyncService
                     $q->whereNull('block')->orWhere('block', '');
                 });
             })
-            ->when($studentBlock !== null, fn ($q) => $q->where('block', $studentBlock))
+            ->when($studentBlock !== null, fn($q) => $q->where('block', $studentBlock))
             ->where('is_active', true)
             ->first();
     }
@@ -168,7 +168,7 @@ class EnrollmentSyncService
             $offerings = $section
                 ? TeacherSubject::where('section_id', $section->id)
                     ->where('status', 'active')
-                    ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+                    ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
                     ->get()
                 : collect();
         }
@@ -181,7 +181,7 @@ class EnrollmentSyncService
         // registrar's hand-placed rows survive a re-sync.
         $stale = ClassOfferingStudent::where('student_id', $student->id)
             ->whereNull('assigned_by')
-            ->when($offeringIds->isNotEmpty(), fn ($q) => $q->whereNotIn('teacher_subject_id', $offeringIds))
+            ->when($offeringIds->isNotEmpty(), fn($q) => $q->whereNotIn('teacher_subject_id', $offeringIds))
             ->get();
 
         foreach ($stale as $row) {
@@ -191,7 +191,7 @@ class EnrollmentSyncService
                 ->where('student_id', $student->id)
                 ->where('status', 'submitted')
                 ->exists();
-            if (! $hasSubmittedGrade) {
+            if (!$hasSubmittedGrade) {
                 $row->delete();
                 $removed++;
             }
@@ -264,8 +264,8 @@ class EnrollmentSyncService
             ? TeacherSubject::whereIn('subject_id', $subjectIds)
                 ->where('section_id', $section->id)
                 ->where('status', 'active')
-                ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-                ->when($semester, fn ($q) => $q->where('semester', $semester))
+                ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
+                ->when($semester, fn($q) => $q->where('semester', $semester))
                 ->get()
             : collect();
 
@@ -274,11 +274,11 @@ class EnrollmentSyncService
         // Backfill with same-course/year offerings for subjects that have
         // no section offering yet.
         $missingSubjectIds = array_diff($subjectIds, $found->keys()->all());
-        if (! empty($missingSubjectIds)) {
+        if (!empty($missingSubjectIds)) {
             $fallback = TeacherSubject::whereIn('subject_id', $missingSubjectIds)
                 ->where('status', 'active')
-                ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-                ->when($semester, fn ($q) => $q->where('semester', $semester))
+                ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
+                ->when($semester, fn($q) => $q->where('semester', $semester))
                 ->whereHas('section', function ($q) use ($student) {
                     $q->where('course', $student->course)
                         ->where('year_level', $student->year_level)
@@ -286,7 +286,7 @@ class EnrollmentSyncService
                 })
                 ->get()
                 ->groupBy('subject_id')
-                ->map(fn ($g) => $g->first());
+                ->map(fn($g) => $g->first());
             $found = $found->merge($fallback);
         }
 
@@ -336,7 +336,7 @@ class EnrollmentSyncService
         if ($enrollment) {
             return $enrollment->id;
         }
-        if (! $createIfMissing) {
+        if (!$createIfMissing) {
             return null;
         }
         $schoolYear = $offering->school_year_id

@@ -120,4 +120,28 @@ class AdminUserController extends Controller
 
         return redirect()->route('admin.teachers')->with('success', 'Teacher account created successfully.');
     }
+
+    public function deactivateTeacher(User $teacher)
+    {
+        if ($teacher->role !== 'teacher') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $teacher->is_active = false;
+        $teacher->save();
+
+        return redirect()->route('admin.teachers')->with('success', 'Teacher account deactivated successfully.');
+    }
+
+    public function reactivateTeacher(User $teacher)
+    {
+        if ($teacher->role !== 'teacher') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $teacher->is_active = true;
+        $teacher->save();
+
+        return redirect()->route('admin.teachers')->with('success', 'Teacher account reactivated successfully.');
+    }
 }

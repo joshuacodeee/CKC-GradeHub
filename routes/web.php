@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
         // Teachers
         Route::get('/teachers', [AdminUserController::class, 'teachers'])->name('teachers');
         Route::post('/teachers', [AdminUserController::class, 'storeTeacher'])->name('teachers.store');
+        Route::patch('/teachers/{teacher}/deactivate', [AdminUserController::class, 'deactivateTeacher'])->name('teacher.deactivate');
+        Route::patch('/teachers/{teacher}/reactivate', [AdminUserController::class, 'reactivateTeacher'])->name('teacher.reactivate');
 
         // Subjects — full CRUD
         Route::get('/subjects', [AdminSubjectController::class, 'index'])->name('subjects');

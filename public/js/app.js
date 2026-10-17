@@ -151,7 +151,7 @@
     /* ---------------------------------------------------------------------
      * Confirmation dialog (promise-based, uses the #confirm-dialog modal)
      * ------------------------------------------------------------------- */
-    function confirmAction(
+    window.confirmAction = function (
         message,
         {
             title = "Please confirm",
@@ -188,7 +188,7 @@
             modal.classList.remove("hidden");
             document.body.classList.add("overflow-hidden");
         });
-    }
+    };
 
     /* ---------------------------------------------------------------------
      * Toast notifications
@@ -315,6 +315,9 @@
                 const tableId = select.getAttribute("data-table-filter");
                 const col = select.getAttribute("data-filter-column");
                 const val = select.value;
+                console.log(
+                    `Filtering table #${tableId} by column "${col}" with value "${val}"`,
+                );
                 document
                     .querySelectorAll(`#${tableId} tbody tr`)
                     .forEach((row) => {
@@ -519,10 +522,18 @@
             const close = function () {
                 el.style.transition = "opacity .2s ease";
                 el.style.opacity = "0";
-                setTimeout(function () { el.remove(); }, 200);
+                setTimeout(function () {
+                    el.remove();
+                }, 200);
             };
-            el.querySelector("[data-flash-close]")?.addEventListener("click", close);
-            if (el.getAttribute("data-flash-type") === "success" || el.getAttribute("data-flash-type") === "info") {
+            el.querySelector("[data-flash-close]")?.addEventListener(
+                "click",
+                close,
+            );
+            if (
+                el.getAttribute("data-flash-type") === "success" ||
+                el.getAttribute("data-flash-type") === "info"
+            ) {
                 setTimeout(close, 4000);
             }
         });

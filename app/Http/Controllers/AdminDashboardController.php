@@ -123,8 +123,8 @@ class AdminDashboardController extends Controller
      */
     private function dashboardNotifications(): Collection
     {
-        return $this->gradeNotifications()
-            ->merge($this->studentNotifications())
+        return (new Collection($this->gradeNotifications()->all()))
+            ->merge($this->studentNotifications()->all())
             ->sortByDesc('time')
             ->take(5)
             ->values()

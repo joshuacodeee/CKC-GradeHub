@@ -11,6 +11,7 @@ use App\Support\GradingScale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\ClassOfferingStudent;
 
 class TeacherController extends Controller
 {
@@ -33,7 +34,7 @@ class TeacherController extends Controller
         if ($prelim === null && $midterm === null && $final === null) {
             return null;
         }
-        $values = array_filter([$prelim, $midterm, $final], fn ($v) => $v !== null);
+        $values = array_filter([$prelim, $midterm, $final], fn($v) => $v !== null);
         if (empty($values)) {
             return null;
         }
@@ -46,16 +47,15 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $assignedClasses = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section', 'schoolYear'])
             ->get();
 
         $assignmentIds = $assignedClasses->pluck('id');
 
-        $totalStudents = $assignedClasses->sum(
-            fn ($c) => $c->section?->studentCount() ?? 0
-        );
+        $totalStudents = ClassOfferingStudent::whereIn('teacher_subject_id', $assignmentIds)
+            ->distinct('student_id')->count('student_id');
 
         // Add the count of irregular students explicitly assigned to any
         // of this teacher's class offerings, so the dashboard reflects
@@ -81,7 +81,7 @@ class TeacherController extends Controller
             ->keyBy('teacher_assignment_id');
 
         $classRows = $assignedClasses->map(function ($class) use ($submittedByAssignment) {
-            $total = $class->section?->studentCount() ?? 0;
+            $total = ClassOfferingStudent::where('teacher_subject_id', $class->id)->count();
             $row = $submittedByAssignment->get($class->id);
             // `$row` is null when this assignment has zero submitted grades;
             // the GROUP BY query simply doesn't return a row for it. Treat
@@ -93,14 +93,14 @@ class TeacherController extends Controller
             $avg = isset($row?->avg_grade) ? round((float) $row->avg_grade, 2) : null;
             $pct = $total > 0 ? (int) round(($submitted / $total) * 100) : 0;
             return [
-                'id'        => $class->id,
-                'subject'   => $class->subject,
-                'section'   => $class->section,
-                'schoolYear'=> $class->schoolYear,
-                'total'     => $total,
+                'id' => $class->id,
+                'subject' => $class->subject,
+                'section' => $class->section,
+                'schoolYear' => $class->schoolYear,
+                'total' => $total,
                 'submitted' => $submitted,
-                'pct'       => $pct,
-                'average'   => $avg,
+                'pct' => $pct,
+                'average' => $avg,
             ];
         });
 
@@ -113,8 +113,8 @@ class TeacherController extends Controller
 
         return view('teacher.dashboard', [
             'assignedClasses' => $assignedClasses,
-            'classRows'       => $classRows,
-            'recentGrades'    => $recentGrades,
+            'classRows' => $classRows,
+            'recentGrades' => $recentGrades,
             'totalStudents' => $totalStudents,
             'pendingGrades' => $pendingGrades,
             'schoolYear' => $schoolYear,
@@ -127,7 +127,7 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $classes = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section', 'schoolYear'])
             ->get();
@@ -144,14 +144,14 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $assignments = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
 
         $subjects = $assignments
             ->groupBy('subject_id')
-            ->map(fn ($group) => $group->first()->subject)
+            ->map(fn($group) => $group->first()->subject)
             ->values();
 
         $subjectDetails = $assignments->groupBy('subject_id');
@@ -173,7 +173,7 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $assignments = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section', 'schoolYear'])
             ->get()
@@ -191,29 +191,29 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $assignments = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['section', 'subject'])
             ->get();
 
         $sectionStudents = $assignments
-            ->map(fn ($a) => $a->section)
+            ->map(fn($a) => $a->section)
             ->filter()
-            ->map(fn ($s) => $s->students)
+            ->map(fn($s) => $s->students)
             ->flatten()
             ->unique('id');
 
         $assignmentIds = $assignments->pluck('id');
         $explicitStudents = User::whereIn('id', function ($q) use ($assignmentIds) {
-                $q->select('student_id')->from('class_offering_student')->whereIn('teacher_subject_id', $assignmentIds);
-            })
+            $q->select('student_id')->from('class_offering_student')->whereIn('teacher_subject_id', $assignmentIds);
+        })
             ->where('role', 'student')
             ->get();
 
         $students = $sectionStudents
             ->merge($explicitStudents)
             ->unique('id')
-            ->sortBy(fn ($s) => $s->last_name_first ?: $s->name)
+            ->sortBy(fn($s) => $s->last_name_first ?: $s->name)
             ->values();
 
         // Filter option lists for the table: each value is a string the
@@ -224,7 +224,7 @@ class TeacherController extends Controller
         $courseOptions = $students
             ->pluck('course')
             ->filter()
-            ->map(fn ($c) => \App\Models\Section::shortCourse((string) $c))
+            ->map(fn($c) => \App\Models\Section::shortCourse((string) $c))
             ->unique()
             ->sort()
             ->values();
@@ -277,7 +277,7 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $classes = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
@@ -292,6 +292,7 @@ class TeacherController extends Controller
                 ->where('status', 'submitted')
                 ->count();
             $class->pending_submissions = $class->total_students - $class->grades_submitted;
+            $class->total_students = ClassOfferingStudent::where('teacher_subject_id', $class->id)->count();
         }
 
         return view('teacher.grades', [
@@ -326,44 +327,13 @@ class TeacherController extends Controller
 
         $teacherSubject->load(['subject', 'section', 'schoolYear']);
 
-        // Source 1: every enrolled student in the section.
-        $sectionEnrollments = Enrollment::where('section_id', $teacherSubject->section_id)
+        $enrollments = Enrollment::whereIn('student_id', $this->rosterStudentIds($teacherSubject))
+            ->where('section_id', $teacherSubject->section_id)
             ->where('status', 'enrolled')
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->with('student')
             ->get()
-            ->keyBy('student_id');
-
-        // Source 2: explicit per-class-offering memberships — this is how
-        // irregular students reach the right teacher.
-        $explicitStudentIds = \App\Models\ClassOfferingStudent::where('teacher_subject_id', $teacherSubject->id)
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
-            ->pluck('student_id');
-
-        $explicitStudents = User::whereIn('id', $explicitStudentIds)
-            ->where('role', 'student')
-            ->get();
-
-        foreach ($explicitStudents as $student) {
-            if ($sectionEnrollments->has($student->id)) {
-                continue;
-            }
-            // Promote the explicit student into the section map by finding
-            // their existing enrollment (the service creates one when the
-            // class_offering_student row is first added).
-            $enrollment = Enrollment::where('student_id', $student->id)
-                ->where('section_id', $teacherSubject->section_id)
-                ->where('status', 'enrolled')
-                ->first();
-            if ($enrollment) {
-                $enrollment->setRelation('student', $student);
-                $sectionEnrollments->put($student->id, $enrollment);
-            }
-        }
-
-        $enrollments = $sectionEnrollments
-            ->values()
-            ->sortBy(fn ($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))
+            ->sortBy(fn($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))
             ->values();
 
         // Existing grades keyed by student_id (user id).
@@ -396,6 +366,13 @@ class TeacherController extends Controller
             'grades.*.midterm' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'grades.*.final' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ])['grades'];
+
+        $allowed = $this->rosterStudentIds($teacherSubject)->all();
+        abort_if(
+            collect($payload)->contains(fn($r) => !in_array($r['student_id'], $allowed)),
+            403,
+            'Student is not enrolled in this subject.'
+        );
 
         $isSubmit = $request->has('action') && $request->input('action') === 'submit';
         $submittedAt = $isSubmit ? now() : null;
@@ -439,7 +416,7 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $submissions = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
@@ -457,6 +434,7 @@ class TeacherController extends Controller
             $sub->status = $sub->total_students > 0 && $sub->submitted_count === $sub->total_students
                 ? 'Submitted'
                 : ($sub->submitted_count > 0 ? 'Partial' : 'Pending');
+            $sub->total_students = ClassOfferingStudent::where('teacher_subject_id', $sub->id)->count();
         }
 
         return view('teacher.reports', [
@@ -508,80 +486,56 @@ class TeacherController extends Controller
     {
         $teacherSubject->load(['subject', 'section', 'teacher', 'schoolYear']);
 
-        // Source 1: students in the section (legacy path).
-        $enrollments = Enrollment::with(['student', 'grade' => function ($q) use ($teacherSubject) {
-                $q->where('teacher_assignment_id', $teacherSubject->id);
-            }])
+        $enrollments = Enrollment::with([
+            'student',
+            'grade' => fn($q) => $q->where('teacher_assignment_id', $teacherSubject->id),
+        ])
+            ->whereIn('student_id', $this->rosterStudentIds($teacherSubject))
             ->where('section_id', $teacherSubject->section_id)
             ->where('status', 'enrolled')
-            ->get()
-            ->keyBy('student_id');
-
-        // Source 2: explicit per-class-offering memberships (irregular
-        // students assigned to this specific offering by a registrar).
-        $explicitStudentIds = \App\Models\ClassOfferingStudent::where('teacher_subject_id', $teacherSubject->id)
-            ->pluck('student_id');
-
-        $explicitStudents = User::whereIn('id', $explicitStudentIds)
-            ->where('role', 'student')
-            ->whereNotIn('id', $enrollments->keys())
-            ->with(['grades' => function ($q) use ($teacherSubject) {
-                $q->where('teacher_assignment_id', $teacherSubject->id);
-            }])
             ->get();
-
-        foreach ($explicitStudents as $student) {
-            $grade = $student->grades->first();
-            $enrollments->put($student->id, (object) [
-                'student' => $student,
-                'student_id' => $student->id,
-                'grade' => $grade,
-            ]);
-        }
-
-        $enrollments = $enrollments->values()->sortBy(fn ($e) => $e->student?->last_name_first ?: ($e->student?->name ?? ''))->values();
 
         $gradeRows = $enrollments->map(function ($enrollment) use ($teacherSubject) {
             $grade = $enrollment->grade;
             $student = $enrollment->student;
             return [
-                'student_id'   => $enrollment->student_id,
+                'student_id' => $enrollment->student_id,
                 'student_name' => $student?->last_name_first ?: ($student?->name ?? '—'),
-                'student_no'   => $student?->student_id ?? '—',
-                'course'       => $student?->short_course_name,
-                'year_level'   => $student?->year_level,
-                'block'        => $student?->block,
-                'prelim'       => $grade?->prelim,
-                'midterm'      => $grade?->midterm,
-                'final'        => $grade?->final,
-                'final_grade'  => $grade?->final_grade,
-                'remarks'      => $grade?->remarks,
-                'status'       => $grade?->status,
+                'student_no' => $student?->student_id ?? '—',
+                'course' => $student?->short_course_name,
+                'year_level' => $student?->year_level,
+                'block' => $student?->block,
+                'prelim' => $grade?->prelim,
+                'midterm' => $grade?->midterm,
+                'final' => $grade?->final,
+                'final_grade' => $grade?->final_grade,
+                'remarks' => $grade?->remarks,
+                'status' => $grade?->status,
                 'submitted_at' => $grade?->submitted_at,
             ];
         });
 
         $submittedCount = $gradeRows->where('status', 'submitted')->count();
-        $gradedCount    = $gradeRows->filter(fn ($r) => $r['final_grade'] !== null)->count();
-        $classAverage   = $gradeRows->filter(fn ($r) => $r['final_grade'] !== null)
-            ->avg(fn ($r) => (float) $r['final_grade']);
+        $gradedCount = $gradeRows->filter(fn($r) => $r['final_grade'] !== null)->count();
+        $classAverage = $gradeRows->filter(fn($r) => $r['final_grade'] !== null)
+            ->avg(fn($r) => (float) $r['final_grade']);
 
         $distribution = [
-            '90-100'    => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 90 && $r['final_grade'] <= 100)->count(),
-            '85-89'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 85 && $r['final_grade'] < 90)->count(),
-            '80-84'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 80 && $r['final_grade'] < 85)->count(),
-            '75-79'     => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] >= 75 && $r['final_grade'] < 80)->count(),
-            'Below 75'  => $gradeRows->filter(fn ($r) => $r['final_grade'] !== null && $r['final_grade'] < 75)->count(),
+            '90-100' => $gradeRows->filter(fn($r) => $r['final_grade'] !== null && $r['final_grade'] >= 90 && $r['final_grade'] <= 100)->count(),
+            '85-89' => $gradeRows->filter(fn($r) => $r['final_grade'] !== null && $r['final_grade'] >= 85 && $r['final_grade'] < 90)->count(),
+            '80-84' => $gradeRows->filter(fn($r) => $r['final_grade'] !== null && $r['final_grade'] >= 80 && $r['final_grade'] < 85)->count(),
+            '75-79' => $gradeRows->filter(fn($r) => $r['final_grade'] !== null && $r['final_grade'] >= 75 && $r['final_grade'] < 80)->count(),
+            'Below 75' => $gradeRows->filter(fn($r) => $r['final_grade'] !== null && $r['final_grade'] < 75)->count(),
         ];
 
         return [
-            'assignment'      => $teacherSubject,
-            'gradeRows'       => $gradeRows,
-            'totalStudents'   => $gradeRows->count(),
-            'submittedCount'  => $submittedCount,
-            'gradedCount'     => $gradedCount,
-            'classAverage'    => $classAverage !== null ? round((float) $classAverage, 2) : null,
-            'distribution'    => $distribution,
+            'assignment' => $teacherSubject,
+            'gradeRows' => $gradeRows,
+            'totalStudents' => $gradeRows->count(),
+            'submittedCount' => $submittedCount,
+            'gradedCount' => $gradedCount,
+            'classAverage' => $classAverage !== null ? round((float) $classAverage, 2) : null,
+            'distribution' => $distribution,
         ];
     }
 
@@ -591,7 +545,7 @@ class TeacherController extends Controller
         $schoolYear = $this->currentSchoolYear();
 
         $assignments = $user->teacherAssignments()
-            ->when($schoolYear, fn ($q) => $q->where('school_year_id', $schoolYear->id))
+            ->when($schoolYear, fn($q) => $q->where('school_year_id', $schoolYear->id))
             ->where('status', 'active')
             ->with(['subject', 'section'])
             ->get();
@@ -616,7 +570,9 @@ class TeacherController extends Controller
             'lastname' => ['required', 'string', 'max:255'],
             'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
             'email' => [
-                'required', 'email', 'max:255',
+                'required',
+                'email',
+                'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
             ],
             'phone' => ['nullable', 'string', 'max:32'],
@@ -627,5 +583,11 @@ class TeacherController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Profile updated successfully.');
+    }
+
+    protected function rosterStudentIds(TeacherSubject $ts)
+    {
+        return ClassOfferingStudent::where('teacher_subject_id', $ts->id)
+            ->pluck('student_id');
     }
 }

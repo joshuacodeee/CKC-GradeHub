@@ -75,8 +75,8 @@ class AppServiceProvider extends ServiceProvider
                             ];
                         });
 
-                    $notifications = $gradeNotifs
-                        ->merge($studentNotifs)
+                    $notifications = collect($gradeNotifs->all())
+                        ->merge($studentNotifs->all())
                         ->sortByDesc('time')
                         ->take(5)
                         ->values()

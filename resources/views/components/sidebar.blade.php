@@ -1,46 +1,60 @@
 @php
-  $navs = [
-    'admin' => [
-      ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'key' => 'dashboard'],
-      ['label' => 'Students', 'icon' => 'users', 'route' => 'admin.students', 'key' => 'students'],
-      ['label' => 'Teachers', 'icon' => 'graduation-cap', 'route' => 'admin.teachers', 'key' => 'teachers'],
-      ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'admin.subjects', 'key' => 'subjects'],
-      ['label' => 'Sections', 'icon' => 'layers', 'route' => 'admin.sections', 'key' => 'sections'],
-      ['label' => 'Curricula', 'icon' => 'list-tree', 'route' => 'admin.curricula', 'key' => 'curricula'],
-      ['label' => 'School Years', 'icon' => 'calendar-range', 'route' => 'admin.settings', 'key' => 'school-years'],
-      ['label' => 'Teacher Assignments', 'icon' => 'user-check', 'route' => 'admin.assignments', 'key' => 'assignments'],
-      ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'admin.reports', 'key' => 'reports'],
-      ['label' => 'Settings', 'icon' => 'settings', 'route' => 'admin.settings', 'key' => 'settings'],
-    ],
+    $navs = [
+        'admin' => [
+            ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'key' => 'dashboard'],
+            ['label' => 'Students', 'icon' => 'users', 'route' => 'admin.students', 'key' => 'students'],
+            ['label' => 'Teachers', 'icon' => 'graduation-cap', 'route' => 'admin.teachers', 'key' => 'teachers'],
+            ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'admin.subjects', 'key' => 'subjects'],
+            ['label' => 'Sections', 'icon' => 'layers', 'route' => 'admin.sections', 'key' => 'sections'],
+            ['label' => 'Curricula', 'icon' => 'list-tree', 'route' => 'admin.curricula', 'key' => 'curricula'],
+            [
+                'label' => 'Teacher Assignments',
+                'icon' => 'user-check',
+                'route' => 'admin.assignments',
+                'key' => 'assignments',
+            ],
+            ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'admin.reports', 'key' => 'reports'],
+            ['label' => 'Settings', 'icon' => 'settings', 'route' => 'admin.settings', 'key' => 'settings'],
+        ],
 
-    'teacher' => [
-      ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'teacher.dashboard', 'key' => 'dashboard'],
-      ['label' => 'My Classes', 'icon' => 'presentation', 'route' => 'teacher.classes', 'key' => 'classes'],
-      ['label' => 'My Subjects', 'icon' => 'book-open', 'route' => 'teacher.subjects', 'key' => 'subjects'],
-      ['label' => 'My Sections', 'icon' => 'layers', 'route' => 'teacher.sections', 'key' => 'sections'],
-      ['label' => 'Students', 'icon' => 'users', 'route' => 'teacher.students', 'key' => 'students'],
-      ['label' => 'Enter Grades', 'icon' => 'square-pen', 'route' => 'teacher.grades', 'key' => 'grades'],
-      ['label' => 'Grade Records', 'icon' => 'clipboard-list', 'route' => 'teacher.grades', 'key' => 'records'],
-      ['label' => 'Reports', 'icon' => 'file-bar-chart-2', 'route' => 'teacher.reports', 'key' => 'reports'],
-    ],
+        'teacher' => [
+            [
+                'label' => 'Dashboard',
+                'icon' => 'layout-dashboard',
+                'route' => 'teacher.dashboard',
+                'key' => 'dashboard',
+            ],
+            ['label' => 'My Classes', 'icon' => 'presentation', 'route' => 'teacher.classes', 'key' => 'classes'],
+            ['label' => 'My Subjects', 'icon' => 'book-open', 'route' => 'teacher.subjects', 'key' => 'subjects'],
+            ['label' => 'My Sections', 'icon' => 'layers', 'route' => 'teacher.sections', 'key' => 'sections'],
+            ['label' => 'Students', 'icon' => 'users', 'route' => 'teacher.students', 'key' => 'students'],
+            ['label' => 'Enter Grades', 'icon' => 'square-pen', 'route' => 'teacher.grades', 'key' => 'grades'],
+            ['label' => 'Reports', 'icon' => 'file-bar-chart-2', 'route' => 'teacher.reports', 'key' => 'reports'],
+        ],
 
-    'student' => [
-      ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'student.dashboard', 'key' => 'dashboard'],
-      ['label' => 'My Grades', 'icon' => 'square-check', 'route' => 'student.grades', 'key' => 'grades'],
-      ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'student.subjects', 'key' => 'subjects'],
-      ['label' => 'Academic Records', 'icon' => 'archive', 'route' => 'student.records', 'key' => 'records'],
-    ],
-  ];
+        'student' => [
+            [
+                'label' => 'Dashboard',
+                'icon' => 'layout-dashboard',
+                'route' => 'student.dashboard',
+                'key' => 'dashboard',
+            ],
+            ['label' => 'My Grades', 'icon' => 'square-check', 'route' => 'student.grades', 'key' => 'grades'],
+            ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'student.subjects', 'key' => 'subjects'],
+            ['label' => 'Academic Records', 'icon' => 'archive', 'route' => 'student.records', 'key' => 'records'],
+        ],
+    ];
 
-  $items = $navs[$role] ?? $navs['admin'];
+    $items = $navs[$role] ?? $navs['admin'];
 
-  $profileRoute = $role . '.profile';
+    $profileRoute = $role . '.profile';
 
-  $roleLabel = [
-    'admin' => 'Administrator',
-    'teacher' => 'Teacher',
-    'student' => 'Student'
-  ][$role] ?? 'User';
+    $roleLabel =
+        [
+            'admin' => 'Administrator',
+            'teacher' => 'Teacher',
+            'student' => 'Student',
+        ][$role] ?? 'User';
 @endphp
 
 
@@ -48,7 +62,8 @@
 SIDEBAR
 ============================================================ --}}
 
-<aside id="sg-sidebar" class="
+<aside id="sg-sidebar"
+    class="
         sg-sidebar
         fixed
         inset-y-0
@@ -65,11 +80,12 @@ SIDEBAR
         ease-in-out
     ">
 
-  {{-- ========================================================
+    {{-- ========================================================
   BRAND
   ========================================================= --}}
 
-  <div class="
+    <div
+        class="
             flex
             items-center
             justify-between
@@ -81,10 +97,11 @@ SIDEBAR
             border-white/10
         ">
 
-    <a href="{{ route($role . '.dashboard') }}" class="flex items-center gap-3 min-w-0">
+        <a href="{{ route($role . '.dashboard') }}" class="flex items-center gap-3 min-w-0">
 
-      {{-- CKC Logo --}}
-      <div class="
+            {{-- CKC Logo --}}
+            <div
+                class="
                     w-10
                     h-10
                     flex-shrink-0
@@ -96,14 +113,13 @@ SIDEBAR
                     justify-center
                 ">
 
-        @if(file_exists(public_path('logo/gradehub.jpg')))
-
-          <img src="{{ asset('logo/gradehub.jpg') }}" alt="Christ the King College" class="w-12 h-12 object-contain rounded-full">
-
-        @else
-
-          {{-- Fallback if logo does not exist --}}
-          <div class="
+                @if (file_exists(public_path('logo/gradehub.jpg')))
+                    <img src="{{ asset('logo/gradehub.jpg') }}" alt="Christ the King College"
+                        class="w-12 h-12 object-contain rounded-full">
+                @else
+                    {{-- Fallback if logo does not exist --}}
+                    <div
+                        class="
                               w-full
                               h-full
                               flex
@@ -111,67 +127,72 @@ SIDEBAR
                               justify-center
                               bg-white
                           ">
-            <span class="
+                        <span
+                            class="
                                   text-[10px]
                                   font-bold
                                   text-blue-900
                               ">
-              CKC
-            </span>
-          </div>
+                            CKC
+                        </span>
+                    </div>
+                @endif
 
-        @endif
-
-      </div>
+            </div>
 
 
-      {{-- Brand Text --}}
-      <div class="sg-brand-text min-w-0">
+            {{-- Brand Text --}}
+            <div class="sg-brand-text min-w-0">
 
-        <p class="
+                <p
+                    class="
                         font-display
                         font-bold
                         text-sm
                         leading-tight
                         truncate
                     ">
-          CKC GradeHub
-        </p>
+                    CKC GradeHub
+                </p>
 
-        <p class="
+                <p
+                    class="
                         text-[11px]
                         text-white/50
                         leading-tight
                         truncate
                     ">
-          Christ the King College
-        </p>
+                    Christ the King College
+                </p>
 
-      </div>
+            </div>
 
-    </a>
+        </a>
 
 
-    {{-- Mobile Close --}}
-    <button type="button" data-sidebar-close class="
+        {{-- Mobile Close --}}
+        <button type="button" data-sidebar-close
+            class="
                 lg:hidden
                 text-white/70
                 hover:text-white
                 transition
-            " aria-label="Close sidebar">
+            "
+            aria-label="Close sidebar">
 
-      <i data-lucide="x" class="w-5 h-5"></i>
+            <i data-lucide="x" class="w-5 h-5"></i>
 
-    </button>
+        </button>
 
-  </div>
+    </div>
 
 
-  {{-- ========================================================
+    {{-- ========================================================
   NAVIGATION
   ========================================================= --}}
 
-  <nav class="
+    <nav
+        class="
             flex-1
             min-h-0
             overflow-y-auto
@@ -181,7 +202,8 @@ SIDEBAR
             sg-scrollbar-thin
         ">
 
-    <p class="
+        <p
+            class="
                 sg-label
                 px-3
                 text-[11px]
@@ -191,13 +213,13 @@ SIDEBAR
                 text-white/35
                 mb-2
             ">
-      {{ $roleLabel }} Menu
-    </p>
+            {{ $roleLabel }} Menu
+        </p>
 
 
-    @foreach ($items as $item)
-
-      <a href="{{ route($item['route']) }}" class="
+        @foreach ($items as $item)
+            <a href="{{ route($item['route']) }}"
+                class="
                       sg-nav-link
                       flex
                       items-center
@@ -210,29 +232,30 @@ SIDEBAR
                       {{ $active === $item['key'] ? 'active' : '' }}
                   ">
 
-        <i data-lucide="{{ $item['icon'] }}" class="
+                <i data-lucide="{{ $item['icon'] }}"
+                    class="
                           sg-nav-icon
                           w-[18px]
                           h-[18px]
                           flex-shrink-0
                       "></i>
 
-        <span class="sg-label truncate">
-          {{ $item['label'] }}
-        </span>
+                <span class="sg-label truncate">
+                    {{ $item['label'] }}
+                </span>
 
-      </a>
+            </a>
+        @endforeach
 
-    @endforeach
-
-  </nav>
+    </nav>
 
 
-  {{-- ========================================================
+    {{-- ========================================================
   PROFILE + LOGOUT
   ========================================================= --}}
 
-  <div class="
+    <div
+        class="
             border-t
             border-white/10
             p-3
@@ -240,8 +263,9 @@ SIDEBAR
             flex-shrink-0
         ">
 
-    {{-- Profile --}}
-    <a href="{{ route($profileRoute) }}" class="
+        {{-- Profile --}}
+        <a href="{{ route($profileRoute) }}"
+            class="
                 sg-nav-link
                 flex
                 items-center
@@ -253,22 +277,24 @@ SIDEBAR
                 {{ $active === 'profile' ? 'active' : '' }}
             ">
 
-      <i data-lucide="user-circle" class="
+            <i data-lucide="user-circle"
+                class="
                     sg-nav-icon
                     w-[18px]
                     h-[18px]
                     flex-shrink-0
                 "></i>
 
-      <span class="sg-label truncate">
-        Profile
-      </span>
+            <span class="sg-label truncate">
+                Profile
+            </span>
 
-    </a>
+        </a>
 
 
-    {{-- Logout --}}
-    <button type="button" data-logout class="
+        {{-- Logout --}}
+        <button type="button" data-logout
+            class="
                 sg-nav-link
                 w-full
                 flex
@@ -279,16 +305,17 @@ SIDEBAR
                 text-sm
                 font-medium
                 text-left
-            " style="color:#f3b4b4">
+            "
+            style="color:#f3b4b4">
 
-      <i data-lucide="log-out" class="w-[18px] h-[18px] flex-shrink-0"></i>
+            <i data-lucide="log-out" class="w-[18px] h-[18px] flex-shrink-0"></i>
 
-      <span class="sg-label truncate">
-        Logout
-      </span>
+            <span class="sg-label truncate">
+                Logout
+            </span>
 
-    </button>
+        </button>
 
-  </div>
+    </div>
 
 </aside>

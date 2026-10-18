@@ -45,6 +45,17 @@
     input::-ms-clear {
       display: none;
     }
+
+    .auth-brand-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+      object-fit: cover;
+      object-position: center;
+      background: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 24px rgba(11, 26, 51, 0.18);
+    }
   </style>
 </head>
 
@@ -63,9 +74,9 @@
         style="background: var(--sg-navy-500); filter: blur(40px);"></div>
 
       <a href="{{ route('landing') }}" class="relative flex items-center gap-3 group">
-        <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-14 h-14 object-contain rounded-full border border-white/10">
+        <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="auth-brand-logo">
         <span class="leading-tight">
-          <strong class="font-display block text-base">GradeHub</strong>
+          <strong class="font-display block text-base">CKC GradeHub</strong>
           <small class="text-xs text-white/60">Christ the King College</small>
         </span>
       </a>
@@ -101,9 +112,9 @@
         {{-- Top nav row (mobile brand + back link) --}}
         <div class="flex items-center justify-between mb-10">
           <div class="lg:hidden flex items-center gap-3">
-            <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-14 h-14 object-contain rounded-full border border-white/10">
+            <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="auth-brand-logo w-12 h-12">
             <div class="leading-tight">
-              <p class="font-display font-bold text-base" style="color:var(--sg-text)">GradeHub</p>
+              <p class="font-display font-bold text-base" style="color:var(--sg-text)">CKC GradeHub</p>
               <p class="text-xs" style="color:var(--sg-text-muted)">Christ the King College</p>
             </div>
           </div>

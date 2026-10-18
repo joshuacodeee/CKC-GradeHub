@@ -7,31 +7,34 @@ use App\Models\SchoolYear;
 use App\Models\User;
 use App\Support\GradingScale;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class LandingController extends Controller
 {
     public function index()
     {
-        $schoolYear = SchoolYear::where('is_current', true)->first()
-            ?? SchoolYear::where('is_active', true)->latest()->first()
-            ?? SchoolYear::latest()->first();
+        $schoolYear = $this->resolveSchoolYear();
 
         // Student count: number of active students on the platform.
-        $studentCount = User::query()->where('role', 'student')->count();
+        $studentCount = Schema::hasTable('users')
+            ? User::query()->where('role', 'student')->count()
+            : 0;
 
         // Grade snapshot: pull the most recent graded subjects for the current school year
         // (or all years if no school year is set). Each subject appears once with the
         // most-recent final grade recorded, with the corresponding teacher, subject,
         // and student computed. We cap at 5 rows for the visible card.
-        $snapshot = $this->buildGradeSnapshot($schoolYear, 5);
+        $snapshot = Schema::hasTable('grades') ? $this->buildGradeSnapshot($schoolYear, 5) : collect();
 
         // Aggregate stats for the floating chips.
-        $gradesThisWeek = Grade::query()
-            ->whereNotNull('submitted_at')
-            ->where('submitted_at', '>=', now()->subWeek())
-            ->count();
+        $gradesThisWeek = Schema::hasTable('grades')
+            ? Grade::query()
+                ->whereNotNull('submitted_at')
+                ->where('submitted_at', '>=', now()->subWeek())
+                ->count()
+            : 0;
 
-        $weightedAverage = $this->weightedAverage($schoolYear);
+        $weightedAverage = Schema::hasTable('grades') ? $this->weightedAverage($schoolYear) : null;
 
         return view('landing', [
             'schoolYear'         => $schoolYear,
@@ -42,6 +45,17 @@ class LandingController extends Controller
             'gradingScale'       => GradingScale::table(),
             'passingGrade'       => GradingScale::PASSING_GRADE,
         ]);
+    }
+
+    private function resolveSchoolYear(): ?SchoolYear
+    {
+        if (! Schema::hasTable('school_years')) {
+            return null;
+        }
+
+        return SchoolYear::where('is_current', true)->first()
+            ?? SchoolYear::where('is_active', true)->latest()->first()
+            ?? SchoolYear::latest()->first();
     }
 
     /**

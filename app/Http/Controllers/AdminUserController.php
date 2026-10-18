@@ -19,7 +19,13 @@ class AdminUserController extends Controller
                 ->where('role', 'student')
                 ->alphabetical()
                 ->get(),
+            'role' => Auth::user()->role,
         ]);
+    }
+
+    public function registrarStudents()
+    {
+        return $this->students();
     }
 
     public function storeStudent(Request $request)
@@ -106,10 +112,11 @@ class AdminUserController extends Controller
             'middlename' => ['nullable', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
             'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email', 'ends_with:@ckcgingoog.edu.ph'],
             'password' => ['required', 'confirmed', 'min:8'],
         ], [
             'sex.in' => 'Please select a valid sex.',
+            'email.ends_with' => 'Teacher email must be a valid @ckcgingoog.edu.ph address.',
         ]);
 
         User::create([
@@ -119,6 +126,35 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()->route('admin.teachers')->with('success', 'Teacher account created successfully.');
+    }
+
+    public function registrars()
+    {
+        return view('admin.registrars', [
+            'registrars' => User::query()
+                ->where('role', 'registrar')
+                ->alphabetical()
+                ->get(),
+        ]);
+    }
+
+    public function storeRegistrar(Request $request)
+    {
+        $validated = $request->validate([
+            'firstname' => ['required', 'string', 'max:255'],
+            'middlename' => ['nullable', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        User::create([
+            ...$validated,
+            'role' => 'registrar',
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('admin.registrars')->with('success', 'Registrar account created successfully.');
     }
 
     public function deactivateTeacher(User $teacher)

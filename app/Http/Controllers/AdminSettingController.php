@@ -6,6 +6,8 @@ use App\Models\Setting;
 use App\Models\SchoolYear;
 use App\Support\GradingScale;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class AdminSettingController extends Controller
 {
@@ -22,12 +24,17 @@ class AdminSettingController extends Controller
             'grade_weight_midterm' => Setting::get('grade_weight_midterm', '30'),
             'grade_weight_final'   => Setting::get('grade_weight_final', '40'),
             'passing_grade'        => Setting::get('passing_grade', '75'),
+            'signature_path'       => Setting::get('registrar_signature_path'),
         ];
 
         return view('admin.settings', [
             'schoolYears'  => $schoolYears,
             'settings'     => $settings,
             'gradingScale' => GradingScale::table(),
+            'role'         => auth()->user()->role,
+            'signatureUrl' => $settings['signature_path']
+                ? route('registrar-signature')
+                : null,
         ]);
     }
 
@@ -71,6 +78,53 @@ class AdminSettingController extends Controller
 
         return redirect()->route('admin.settings', ['tab' => 'tab-general'])
             ->with('success', 'School information saved.');
+    }
+
+    public function updateSignature(Request $request)
+    {
+        $routePrefix = $request->user()->role;
+        $validator = Validator::make($request->all(), [
+            'signature' => ['required', 'file', 'mimes:png', 'max:5120'],
+        ], [
+            'signature.mimes' => 'Upload the processed PNG signature image.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->route($routePrefix . '.settings', ['tab' => 'tab-signature'])
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
+        $newPath = $validated['signature']->store('signatures', 'local');
+        if ($newPath === false) {
+            throw new \RuntimeException('Unable to store the registrar signature on the local disk.');
+        }
+        $oldPath = Setting::get('registrar_signature_path');
+
+        Setting::set('registrar_signature_path', $newPath);
+
+        if ($oldPath && $oldPath !== $newPath) {
+            Storage::disk('local')->delete($oldPath);
+        }
+
+        return redirect()
+            ->route($routePrefix . '.settings', ['tab' => 'tab-signature'])
+            ->with('success', 'Registrar signature uploaded and saved.');
+    }
+
+    public function signatureImage()
+    {
+        $path = Setting::get('registrar_signature_path');
+
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response(
+            $path,
+            'registrar-signature.png',
+            ['Cache-Control' => 'private, no-store'],
+        );
     }
 
     public function updateGradingScale(Request $request)

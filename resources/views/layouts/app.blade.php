@@ -43,6 +43,14 @@
     {{-- Custom design tokens & component styles --}}
     <link rel="stylesheet" href="/css/custom.css?v={{ filemtime(public_path('css/custom.css')) }}">
 
+    @if (($role ?? '') === 'registrar')
+        <style>
+            @media print {
+                body { display: none !important; }
+            }
+        </style>
+    @endif
+
     <style>
         .sidebar-collapsed #sg-sidebar {
             width: 84px;

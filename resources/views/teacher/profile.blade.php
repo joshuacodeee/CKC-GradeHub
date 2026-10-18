@@ -61,7 +61,9 @@
         </div>
         <div class="col-span-2">
           <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
-          <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="sg-input">
+          <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+            placeholder="name@ckcgingoog.edu.ph" pattern=".+@ckcgingoog\.edu\.ph" class="sg-input">
+          <p class="mt-1 text-xs" style="color:var(--sg-text-muted)">Use your @ckcgingoog.edu.ph account.</p>
           @error('email') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
         </div>
         <div class="col-span-2">

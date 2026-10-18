@@ -394,6 +394,10 @@
                 if (!input) return;
                 const isPassword = input.type === "password";
                 input.type = isPassword ? "text" : "password";
+                btn.setAttribute(
+                    "aria-label",
+                    isPassword ? "Hide password" : "Show password",
+                );
                 btn.innerHTML = isPassword
                     ? '<i data-lucide="eye-off" class="w-4 h-4"></i>'
                     : '<i data-lucide="eye" class="w-4 h-4"></i>';

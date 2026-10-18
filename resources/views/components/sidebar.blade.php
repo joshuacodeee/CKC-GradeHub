@@ -4,6 +4,7 @@
             ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'key' => 'dashboard'],
             ['label' => 'Students', 'icon' => 'users', 'route' => 'admin.students', 'key' => 'students'],
             ['label' => 'Teachers', 'icon' => 'graduation-cap', 'route' => 'admin.teachers', 'key' => 'teachers'],
+            ['label' => 'Registrars', 'icon' => 'contact-round', 'route' => 'admin.registrars', 'key' => 'registrars'],
             ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'admin.subjects', 'key' => 'subjects'],
             ['label' => 'Sections', 'icon' => 'layers', 'route' => 'admin.sections', 'key' => 'sections'],
             ['label' => 'Curricula', 'icon' => 'list-tree', 'route' => 'admin.curricula', 'key' => 'curricula'],
@@ -39,6 +40,12 @@
                 'route' => 'student.dashboard',
                 'key' => 'dashboard',
             ],
+
+            'registrar' => [
+                ['label' => 'Students', 'icon' => 'users', 'route' => 'registrar.students', 'key' => 'students'],
+                ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'registrar.reports', 'key' => 'reports'],
+                ['label' => 'Settings', 'icon' => 'settings', 'route' => 'registrar.settings', 'key' => 'settings'],
+            ],
             ['label' => 'My Grades', 'icon' => 'square-check', 'route' => 'student.grades', 'key' => 'grades'],
             ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'student.subjects', 'key' => 'subjects'],
             ['label' => 'Academic Records', 'icon' => 'archive', 'route' => 'student.records', 'key' => 'records'],
@@ -54,6 +61,7 @@
             'admin' => 'Administrator',
             'teacher' => 'Teacher',
             'student' => 'Student',
+            'registrar' => 'Registrar',
         ][$role] ?? 'User';
 @endphp
 

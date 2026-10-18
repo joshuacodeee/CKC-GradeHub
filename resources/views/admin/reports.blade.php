@@ -1,4 +1,4 @@
-@extends('layouts.app', ['role' => 'admin', 'active' => 'reports', 'title' => 'Grade Reports'])
+@extends('layouts.app', ['role' => $role ?? 'admin', 'active' => 'reports', 'title' => 'Grade Reports'])
 
 @section('content')
   <div class="space-y-5">
@@ -10,9 +10,11 @@
           {{ $schoolYear?->name ?? '2026–2027' }}
         </p>
       </div>
-      <div class="flex gap-2">
-        <button data-print class="sg-btn sg-btn-outline"><i data-lucide="printer" class="w-4 h-4"></i> Print</button>
-      </div>
+      @if (($role ?? 'admin') !== 'registrar')
+        <div class="flex gap-2">
+          <button data-print class="sg-btn sg-btn-outline"><i data-lucide="printer" class="w-4 h-4"></i> Print</button>
+        </div>
+      @endif
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -25,7 +27,7 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-display font-semibold" style="color:var(--sg-text)">Submission Log by Subject & Section</h3>
       </div>
-      <div class="overflow-x-auto no-print">
+      <div class="overflow-x-auto">
         <table class="sg-table">
           <thead>
             <tr>
@@ -67,7 +69,7 @@
                 </td>
                 <td class="text-right no-print">
                   @if($r['status'] !== 'Pending')
-                    <a href="{{ route('admin.reports.show', $r['assignment_id']) }}"
+                    <a href="{{ route(($role ?? 'admin') . '.reports.show', $r['assignment_id']) }}"
                       class="sg-btn sg-btn-ghost !p-2 inline-flex" title="View detailed grade report">
                       <i data-lucide="external-link" class="w-4 h-4"></i>
                     </a>
@@ -85,6 +87,13 @@
           </tbody>
         </table>
       </div>
+      @if ($signatureUrl)
+        <div class="print-only mt-8 ml-auto w-64 text-center text-xs">
+          <img src="{{ $signatureUrl }}" alt="Registrar signature" class="mx-auto max-h-16 max-w-[220px] object-contain">
+          <div class="border-t border-black pt-1 mt-1">College Registrar</div>
+          <div>Christ the King College</div>
+        </div>
+      @endif
     </div>
   </div>
 @endsection

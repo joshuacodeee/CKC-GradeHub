@@ -1,4 +1,4 @@
-@extends('layouts.app', ['role' => 'admin', 'active' => 'students', 'title' => 'Students'])
+@extends('layouts.app', ['role' => $role ?? 'admin', 'active' => 'students', 'title' => 'Students'])
 
 @section('content')
     <div class="space-y-5">
@@ -11,17 +11,28 @@
         </div>
 
         <div class="sg-card p-5">
-            @include('components.table', [
-                'tableId' => 'students-table',
-                'searchPlaceholder' => 'Search by name, ID, or section…',
-                'filterColumn' => 'standing',
-                'filterOptions' => ['Regular', 'Irregular'],
-                'SecondfilterColumn' => 'status',
-                'SecondfilterOptions' => ['Active', 'Inactive'],
-                'addLabel' => 'Add Student',
-                'addModalId' => 'add-student-modal',
-                'addIcon' => 'user-plus',
-            ])
+            @if (($role ?? 'admin') === 'admin')
+                @include('components.table', [
+                    'tableId' => 'students-table',
+                    'searchPlaceholder' => 'Search by name, ID, or section…',
+                    'filterColumn' => 'standing',
+                    'filterOptions' => ['Regular', 'Irregular'],
+                    'SecondfilterColumn' => 'status',
+                    'SecondfilterOptions' => ['Active', 'Inactive'],
+                    'addLabel' => 'Add Student',
+                    'addModalId' => 'add-student-modal',
+                    'addIcon' => 'user-plus',
+                ])
+            @else
+                @include('components.table', [
+                    'tableId' => 'students-table',
+                    'searchPlaceholder' => 'Search by name, ID, or section…',
+                    'filterColumn' => 'standing',
+                    'filterOptions' => ['Regular', 'Irregular'],
+                    'SecondfilterColumn' => 'status',
+                    'SecondfilterOptions' => ['Active', 'Inactive'],
+                ])
+            @endif
 
             <div class="overflow-x-auto -mx-5 px-5">
                 <table class="sg-table" id="students-table">
@@ -56,10 +67,14 @@
                                         class="sg-badge {{ $student->is_active ? 'sg-badge-success' : 'sg-badge-danger' }}">{{ $student->is_active ? 'Active' : 'Inactive' }}</span>
                                 </td>
                                 <td class="text-right">
+                                    @if (($role ?? 'admin') === 'admin')
                                     <a href="{{ route('admin.student-enrollment', $student) }}"
                                         class="sg-btn sg-btn-outline !text-xs !px-2 !py-1">
                                         <i data-lucide="list-checks" class="w-3.5 h-3.5"></i> Manage Enrollment
                                     </a>
+                                    @else
+                                        <span class="text-xs" style="color:var(--sg-text-muted)">View only</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -92,6 +107,7 @@
         </div>
     </div>
 
+    @if (($role ?? 'admin') === 'admin')
     {{-- Add Student Modal --}}
     <div id="add-student-modal" class="hidden fixed inset-0 z-[70] sg-modal-backdrop flex items-center justify-center p-4">
         <div class="sg-modal sg-surface rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
@@ -108,65 +124,84 @@
             <form id="add-student-form" method="POST" action="{{ route('admin.students.store') }}"
                 class="p-6 overflow-y-auto space-y-4">
                 @csrf
+                @if ($errors->any())
+                    <div class="rounded-lg p-3 text-sm" role="alert" style="background:var(--sg-danger-bg); color:var(--sg-danger)">
+                        Please correct the highlighted fields and try again.
+                    </div>
+                @endif
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
-                        <input type="text" name="firstname" required placeholder="e.g. Juan" class="sg-input">
+                        <input type="text" name="firstname" required placeholder="e.g. Juan" value="{{ old('firstname') }}" class="sg-input">
+                        @error('firstname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
-                        <input type="text" name="lastname" required placeholder="e.g. Dela Cruz" class="sg-input">
+                        <input type="text" name="lastname" required placeholder="e.g. Dela Cruz" value="{{ old('lastname') }}" class="sg-input">
+                        @error('lastname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Student ID</label>
-                        <input type="text" name="student_id" required placeholder="e.g. 2026-0001" class="sg-input">
+                        <input type="text" name="student_id" required placeholder="e.g. 2026-0001" value="{{ old('student_id') }}" class="sg-input">
+                        @error('student_id') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
                         <input type="email" name="email" required placeholder="e.g. student@ckcgingoog.edu.ph"
-                            class="sg-input">
+                            value="{{ old('email') }}" class="sg-input">
+                        @error('email') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Course</label>
                         <select name="course" class="sg-select" required>
                             @foreach (['BS Elementary Education', 'BS Secondary Education', 'BS Business Administration', 'BS Accountancy', 'BS Information Technology', 'BS Social Work', 'BS Hospitality Management', 'BS Nursing', 'BS Criminology'] as $course)
-                                <option value="{{ $course }}">{{ $course }}</option>
+                                <option value="{{ $course }}" @selected(old('course') === $course)>{{ $course }}</option>
                             @endforeach
                         </select>
+                        @error('course') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Year Level</label>
                         <select name="year_level" class="sg-select" required>
-                            <option>1st Year</option>
-                            <option>2nd Year</option>
-                            <option>3rd Year</option>
-                            <option>4th Year</option>
-                            <option>5th Year</option>
+                            @foreach (['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'] as $yearLevel)
+                                <option value="{{ $yearLevel }}" @selected(old('year_level') === $yearLevel)>{{ $yearLevel }}</option>
+                            @endforeach
                         </select>
+                        @error('year_level') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Block <span
                                 style="color:var(--sg-text-muted)">(optional)</span></label>
                         <select name="block" class="sg-select">
                             <option value="">— None —</option>
-                            <option>A</option>
-                            <option>B</option>
-                            <option>C</option>
-                            <option>D</option>
-                            <option>E</option>
+                            @foreach (['A', 'B', 'C', 'D', 'E'] as $block)
+                                <option value="{{ $block }}" @selected(old('block') === $block)>{{ $block }}</option>
+                            @endforeach
                         </select>
+                        @error('block') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Password</label>
-                    <input type="password" name="password" required minlength="8" class="sg-input">
+                    <div class="relative">
+                        <input id="student-password" type="password" name="password" required minlength="8" class="sg-input pr-12">
+                        <button type="button" data-password-toggle="student-password" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Show password">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    @error('password') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm Password</label>
-                    <input type="password" name="password_confirmation" required minlength="8" class="sg-input">
+                    <div class="relative">
+                        <input id="student-password-confirmation" type="password" name="password_confirmation" required minlength="8" class="sg-input pr-12">
+                        <button type="button" data-password-toggle="student-password-confirmation" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Show password">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    @error('password_confirmation') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                 </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
+                <div class="flex justify-end gap-2 pt-2">
             <button type="button" data-modal-close="add-student-modal" class="sg-btn sg-btn-outline">Cancel</button>
             <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save
                 Student</button>
@@ -174,6 +209,7 @@
         </form>
     </div>
     </div>
+    @endif
 
     {{-- View Student Modal --}}
     <div id="view-student-modal"
@@ -187,4 +223,13 @@
             <div class="p-6 space-y-3 text-sm" id="view-student-body"></div>
         </div>
     </div>
+    @if ($errors->any() && ($role ?? 'admin') === 'admin')
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.getElementById('add-student-modal')?.classList.remove('hidden');
+                });
+            </script>
+        @endpush
+    @endif
 @endsection

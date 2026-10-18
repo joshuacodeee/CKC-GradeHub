@@ -45,6 +45,7 @@ class LoginController extends Controller
                 'teacher' => redirect()->intended(route('teacher.dashboard')),
                 'student' => redirect()->intended(route('student.dashboard')),
                 'admin' => redirect()->intended(route('admin.dashboard')),
+                'registrar' => redirect()->intended(route('registrar.dashboard')),
                 default => redirect()->route('login'),
             };
         }

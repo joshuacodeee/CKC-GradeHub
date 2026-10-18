@@ -44,12 +44,18 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
 });
 
 Route::middleware('auth')->group(function () {
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/registrar-signature', [AdminSettingController::class, 'signatureImage'])
+        ->middleware('role:admin,teacher,registrar')
+        ->name('registrar-signature');
+
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Students
         Route::get('/students', [AdminUserController::class, 'students'])->name('students');
         Route::post('/students', [AdminUserController::class, 'storeStudent'])->name('students.store');
+        Route::get('/registrars', [AdminUserController::class, 'registrars'])->name('registrars');
+        Route::post('/registrars', [AdminUserController::class, 'storeRegistrar'])->name('registrars.store');
 
         // Per-student enrollment management (irregular flow)
         // Note: routes with literal sub-paths are listed before the {offering}
@@ -99,6 +105,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/settings/school-years/{schoolYear}/activate', [AdminSettingController::class, 'activateSchoolYear'])->name('school-years.activate');
         Route::put('/settings/school-info', [AdminSettingController::class, 'updateSchoolInfo'])->name('school-info.update');
         Route::put('/settings/grading-scale', [AdminSettingController::class, 'updateGradingScale'])->name('grading-scale.update');
+        Route::post('/settings/signature', [AdminSettingController::class, 'updateSignature'])->name('signature.update');
 
         // Teacher Assignments (spec §11)
         Route::get('/assignments', [AdminTeacherAssignmentController::class, 'index'])->name('assignments');
@@ -116,7 +123,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
     });
 
-    Route::prefix('teacher')->name('teacher.')->group(function () {
+    Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
         Route::get('/classes', [TeacherController::class, 'classes'])->name('classes');
         Route::get('/subjects', [TeacherController::class, 'subjects'])->name('subjects');
@@ -136,12 +143,24 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile', [TeacherController::class, 'updateProfile'])->name('profile.update');
     });
 
-    Route::prefix('student')->name('student.')->group(function () {
+    Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
         Route::get('/grades', [StudentController::class, 'grades'])->name('grades');
         Route::get('/subjects', [StudentController::class, 'subjects'])->name('subjects');
         Route::get('/records', [StudentController::class, 'records'])->name('records');
         Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
         Route::put('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
+    });
+
+    Route::middleware('role:registrar')->prefix('registrar')->name('registrar.')->group(function () {
+        Route::get('/dashboard', fn () => redirect()->route('registrar.students'))->name('dashboard');
+        Route::get('/students', [AdminUserController::class, 'registrarStudents'])->name('students');
+        Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
+        Route::get('/reports/{assignment}', [AdminReportController::class, 'show'])->name('reports.show');
+        Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
+        Route::post('/settings/signature', [AdminSettingController::class, 'updateSignature'])->name('signature.update');
+        Route::get('/profile', [AdminProfileController::class, 'profile'])->name('profile');
+        Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
     });
 });

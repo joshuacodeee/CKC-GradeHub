@@ -1,4 +1,4 @@
-@extends('layouts.app', ['role' => 'admin', 'active' => 'reports', 'title' => 'Grade Report'])
+@extends('layouts.app', ['role' => $role ?? 'admin', 'active' => 'reports', 'title' => 'Grade Report'])
 
 @php
     $subject = $assignment->subject;
@@ -20,7 +20,7 @@
 
         {{-- Breadcrumb / back --}}
         <div class="flex items-center gap-2 text-sm" style="color:var(--sg-text-muted)">
-            <a href="{{ route('admin.reports') }}" class="inline-flex items-center gap-1.5 hover:opacity-80">
+            <a href="{{ route(($role ?? 'admin') . '.reports') }}" class="inline-flex items-center gap-1.5 hover:opacity-80">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Grade Reports
             </a>
         </div>
@@ -69,11 +69,13 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 flex-shrink-0">
-                    <button data-print class="sg-btn sg-btn-outline">
-                        <i data-lucide="printer" class="w-4 h-4"></i> Print
-                    </button>
-                </div>
+                @if (($role ?? 'admin') !== 'registrar')
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button data-print class="sg-btn sg-btn-outline">
+                            <i data-lucide="printer" class="w-4 h-4"></i> Print
+                        </button>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -323,7 +325,12 @@
             {{-- Print-only registrar signature --}}
             <div class="print-only mt-10 grid grid-cols-2 gap-10 text-sm">
                 <div class="text-center">
-                    <div style="height: 60px;"></div>
+                    <div class="flex h-[60px] items-end justify-center">
+                        @if ($signatureUrl)
+                            <img src="{{ $signatureUrl }}" alt="Registrar signature"
+                                style="max-width: 220px; max-height: 58px; object-fit: contain;">
+                        @endif
+                    </div>
                     <div class="border-t pt-1" style="border-color: #000;">
                         <p class="font-semibold" style="color: #000;">_________________________</p>
                         <p class="text-xs mt-0.5 font-semibold" style="color: #000;">College Registrar</p>

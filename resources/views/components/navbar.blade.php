@@ -1,6 +1,6 @@
 @php
   $roleKey = is_string($role) ? strtolower($role) : null;
-  $roleLabel = ['admin' => 'Administrator', 'teacher' => 'Teacher', 'student' => 'Student'][$roleKey] ?? 'User';
+  $roleLabel = ['admin' => 'Administrator', 'teacher' => 'Teacher', 'student' => 'Student', 'registrar' => 'Registrar'][$roleKey] ?? 'User';
   $user = auth()->user();
   $userName = $user?->name ?? 'Account';
   $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Grade;
+use App\Models\Setting;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Subject;
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
 
 class AdminReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $schoolYear = SchoolYear::where('is_current', true)->first()
             ?? SchoolYear::where('is_active', true)->latest()->first()
@@ -84,6 +85,10 @@ class AdminReportController extends Controller
             'schoolAverage' => $schoolAverage ? round($schoolAverage, 1) : '—',
             'schoolYear' => $schoolYear,
             'schoolYears' => SchoolYear::where('is_active', true)->latest()->get(),
+            'role' => $request->user()->role,
+            'signatureUrl' => Setting::get('registrar_signature_path')
+                ? route('registrar-signature')
+                : null,
         ]);
     }
 
@@ -164,6 +169,10 @@ class AdminReportController extends Controller
             'gradedCount'     => $gradedCount,
             'classAverage'    => $classAverage !== null ? round((float) $classAverage, 2) : null,
             'distribution'    => $distribution,
+            'role'           => $request->user()->role,
+            'signatureUrl'   => Setting::get('registrar_signature_path')
+                ? route('registrar-signature')
+                : null,
         ]);
     }
 }

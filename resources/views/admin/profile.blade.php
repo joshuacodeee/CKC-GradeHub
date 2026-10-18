@@ -1,4 +1,4 @@
-@extends('layouts.app', ['role' => 'admin', 'active' => 'profile', 'title' => 'My Profile'])
+@extends('layouts.app', ['role' => $role ?? 'admin', 'active' => 'profile', 'title' => 'My Profile'])
 
 @php
   $userInitials = collect(explode(' ', $user->name))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
@@ -12,7 +12,7 @@
     <h3 class="font-display font-semibold text-lg mt-4" style="color:var(--sg-text)" data-current-user-name>
       {{ $user->name }}
     </h3>
-    <p class="text-sm" style="color:var(--sg-text-muted)">System Administrator</p>
+    <p class="text-sm" style="color:var(--sg-text-muted)">{{ ucfirst($role ?? 'admin') }}</p>
     <span class="sg-badge sg-badge-success mt-3 inline-flex">Active</span>
     <div class="mt-5 pt-5 border-t space-y-2 text-left text-sm" style="border-color:var(--sg-border)">
       <p class="flex items-center gap-2" style="color:var(--sg-text-muted)"><i data-lucide="mail" class="w-4 h-4"></i>
@@ -27,7 +27,7 @@
 
   <div class="lg:col-span-2 sg-card p-6 space-y-4">
     <h3 class="font-display font-semibold" style="color:var(--sg-text)">Account Information</h3>
-    <form id="admin-profile-form" method="POST" action="{{ route('admin.profile.update') }}" class="space-y-4">
+    <form id="admin-profile-form" method="POST" action="{{ route(($role ?? 'admin') . '.profile.update') }}" class="space-y-4">
       @csrf
       @method('PUT')
       <div class="grid grid-cols-2 gap-4">
@@ -43,7 +43,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Role</label>
-          <input type="text" value="System Administrator" class="sg-input" disabled>
+          <input type="text" value="{{ ucfirst($role ?? 'admin') }}" class="sg-input" disabled>
         </div>
         <div>
           <span class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Sex</span>
@@ -77,7 +77,7 @@
 
     <div class="pt-4 mt-4 border-t" style="border-color:var(--sg-border)">
       <h3 class="font-display font-semibold mb-3" style="color:var(--sg-text)">Change Password</h3>
-      <form id="admin-password-form" method="POST" action="{{ route('admin.profile.password') }}" class="space-y-4">
+      <form id="admin-password-form" method="POST" action="{{ route(($role ?? 'admin') . '.profile.password') }}" class="space-y-4">
         @csrf
         @method('PUT')
         <div class="grid grid-cols-2 gap-4">

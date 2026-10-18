@@ -13,6 +13,7 @@ class AdminProfileController extends Controller
     {
         return view('admin.profile', [
             'user' => auth()->user(),
+            'role' => auth()->user()->role,
         ]);
     }
 
@@ -24,7 +25,11 @@ class AdminProfileController extends Controller
         $validated = $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
             'lastname' => ['required', 'string', 'max:255'],
-            'sex' => ['required', 'string', 'in:' . implode(',', $sexes)],
+            'sex' => [
+                auth()->user()->role === 'registrar' ? 'nullable' : 'required',
+                'string',
+                'in:' . implode(',', $sexes),
+            ],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:32'],
         ], [

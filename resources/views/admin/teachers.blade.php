@@ -87,7 +87,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher
+                                <td colspan="5" class="text-center py-10" style="color:var(--sg-text-muted)">No teacher
                                     accounts have been
                                     created yet.</td>
                             </tr>
@@ -118,32 +118,39 @@
             <form id="add-teacher-form" method="POST" action="{{ route('admin.teachers.store') }}"
                 class="p-6 overflow-y-auto space-y-4">
                 @csrf
+                @if ($errors->any())
+                    <div class="rounded-lg p-3 text-sm" role="alert" style="background:var(--sg-danger-bg); color:var(--sg-danger)">
+                        Please correct the highlighted fields and try again.
+                    </div>
+                @endif
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">First Name</label>
-                        <input type="text" name="firstname" required placeholder="e.g. Andrea" class="sg-input">
+                        <input type="text" name="firstname" required placeholder="e.g. Andrea" value="{{ old('firstname') }}" class="sg-input">
+                        @error('firstname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">
                             Middle Name <span class="text-xs" style="color:var(--sg-text-muted)">(optional)</span>
                         </label>
-                        <input type="text" name="middlename" placeholder="e.g. Cruz" class="sg-input">
+                        <input type="text" name="middlename" placeholder="e.g. Cruz" value="{{ old('middlename') }}" class="sg-input">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Last Name</label>
-                        <input type="text" name="lastname" required placeholder="e.g. Reyes" class="sg-input">
+                        <input type="text" name="lastname" required placeholder="e.g. Reyes" value="{{ old('lastname') }}" class="sg-input">
+                        @error('lastname') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <span class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Sex</span>
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center gap-2 text-sm cursor-pointer"
                                 style="color:var(--sg-text)">
-                                <input type="radio" name="sex" value="Male" required>
+                                <input type="radio" name="sex" value="Male" required @checked(old('sex') === 'Male')>
                                 Male
                             </label>
                             <label class="inline-flex items-center gap-2 text-sm cursor-pointer"
                                 style="color:var(--sg-text)">
-                                <input type="radio" name="sex" value="Female">
+                                <input type="radio" name="sex" value="Female" @checked(old('sex') === 'Female')>
                                 Female
                             </label>
                         </div>
@@ -153,16 +160,31 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email Address</label>
-                        <input type="email" name="email" required placeholder="name@nbit.edu.ph" class="sg-input">
+                        <input type="email" name="email" required placeholder="name@ckcgingoog.edu.ph"
+                            value="{{ old('email') }}" class="sg-input" pattern=".+@ckcgingoog\.edu\.ph">
+                        <p class="mt-1 text-xs" style="color:var(--sg-text-muted)">Use your @ckcgingoog.edu.ph account.</p>
+                        @error('email') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Password</label>
-                        <input type="password" name="password" required minlength="8" class="sg-input">
+                        <div class="relative">
+                            <input id="teacher-password" type="password" name="password" required minlength="8" class="sg-input pr-12">
+                            <button type="button" data-password-toggle="teacher-password" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Show password">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        @error('password') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Confirm
                             Password</label>
-                        <input type="password" name="password_confirmation" required minlength="8" class="sg-input">
+                        <div class="relative">
+                            <input id="teacher-password-confirmation" type="password" name="password_confirmation" required minlength="8" class="sg-input pr-12">
+                            <button type="button" data-password-toggle="teacher-password-confirmation" class="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Show password">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        @error('password_confirmation') <p class="mt-1 text-xs" style="color:var(--sg-danger)">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-4 border-t" style="border-color:var(--sg-border)">
@@ -174,4 +196,13 @@
             </form>
         </div>
     </div>
+    @if ($errors->any())
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.getElementById('add-teacher-modal')?.classList.remove('hidden');
+                });
+            </script>
+        @endpush
+    @endif
 @endsection

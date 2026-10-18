@@ -7,6 +7,7 @@ use App\Models\Grade;
 use App\Models\SchoolYear;
 use App\Models\TeacherSubject;
 use App\Models\User;
+use App\Models\Setting;
 use App\Support\GradingScale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -472,6 +473,10 @@ class TeacherController extends Controller
         abort_unless($teacherSubject->teacher_id === $user->id, 403);
 
         $data = $this->buildClassReportData($teacherSubject);
+        $signaturePath = Setting::get('registrar_signature_path');
+        $data['registrarSignatureUrl'] = $signaturePath
+            ? route('registrar-signature')
+            : null;
 
         return view('teacher.reports-print', $data);
     }
@@ -574,10 +579,12 @@ class TeacherController extends Controller
                 'email',
                 'max:255',
                 \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id),
+                'ends_with:@ckcgingoog.edu.ph',
             ],
             'phone' => ['nullable', 'string', 'max:32'],
         ], [
             'sex.in' => 'Please select a valid sex.',
+            'email.ends_with' => 'Teacher email must be a valid @ckcgingoog.edu.ph address.',
         ]);
 
         $user->update($validated);

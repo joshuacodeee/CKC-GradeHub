@@ -119,6 +119,39 @@
         .landing-photo:hover img {
             transform: scale(1.06);
         }
+
+        .brand-mark {
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid rgba(17, 24, 39, 0.08);
+            box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.35);
+            flex-shrink: 0;
+        }
+
+        .brand-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            background: #fff;
+        }
+
+        .brand-mark--dark {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: none;
+        }
+
+        .brand-mark--dark img {
+            background: rgba(255, 255, 255, 0.06);
+        }
     </style>
 </head>
 
@@ -147,8 +180,9 @@
         style="background:var(--sg-surface); border-color:var(--sg-border)">
         <div class="max-w-7xl mx-auto px-6 lg:px-10 py-3 flex items-center justify-between gap-6">
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
-                <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub"
-                    class="w-12 h-12 object-contain rounded-full border" style="border-color:var(--sg-border)">
+                <div class="brand-mark" aria-label="CKC GradeHub">
+                    <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub">
+                </div>
                 <span class="leading-tight">
                     <small class="block text-[10px] font-semibold uppercase tracking-[0.2em]"
                         style="color:var(--sg-text-muted)">Christ the King College</small>
@@ -615,8 +649,9 @@
         <div class="max-w-7xl mx-auto px-6 lg:px-10 py-14 grid gap-10 md:grid-cols-3">
             <div>
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub"
-                        class="w-12 h-12 object-contain rounded-full border" style="border-color:rgba(255,255,255,.2)">
+                    <div class="brand-mark brand-mark--dark" aria-label="CKC GradeHub">
+                        <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub">
+                    </div>
                     <div class="leading-tight">
                         <p class="font-display font-bold text-white">CHRIST THE KING COLLEGE</p>
                         <p class="text-xs" style="color:var(--sg-brass-500)">Faith, Excellence, Service</p>

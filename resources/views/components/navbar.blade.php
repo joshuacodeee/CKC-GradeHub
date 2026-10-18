@@ -1,5 +1,6 @@
 @php
-  $roleLabel = ['admin' => 'Administrator', 'teacher' => 'Teacher', 'student' => 'Student'][$role] ?? 'User';
+  $roleKey = is_string($role) ? strtolower($role) : null;
+  $roleLabel = ['admin' => 'Administrator', 'teacher' => 'Teacher', 'student' => 'Student'][$roleKey] ?? 'User';
   $user = auth()->user();
   $userName = $user?->name ?? 'Account';
   $userInitials = collect(explode(' ', $userName))->filter()->take(2)->map(fn($part) => strtoupper(substr($part, 0, 1)))->join('');
@@ -21,6 +22,18 @@
     <button data-sidebar-collapse class="hidden lg:inline-flex sg-btn sg-btn-ghost !p-2">
       <i data-lucide="panel-left" class="w-5 h-5"></i>
     </button>
+    
+    {{-- logo --}}
+<!-- 
+    <div class="w-10 h-10 rounded-full border overflow-hidden bg-white flex items-center justify-center flex-shrink-0"
+      style="border-color:var(--sg-border)">
+      @if (file_exists(public_path('logo/gradehub.jpg')))
+        <img src="{{ asset('logo/gradehub.jpg') }}" alt="CKC GradeHub" class="w-full h-full object-contain">
+      @else
+        <span class="text-[10px] font-bold text-blue-900">CKC</span>
+      @endif
+    </div> -->
+
     <div class="min-w-0">
       <h1 class="font-display font-bold text-lg sm:text-xl truncate" style="color:var(--sg-text)">{{ $title }}</h1>
       <p class="text-xs hidden sm:block" style="color:var(--sg-text-muted)">
@@ -210,7 +223,8 @@
         };
 
         const markOne = async (id) => {
-          const item = root.querySelector(`.notif-item[data-notif-id="${CSS.escape(id)}"]`);
+          const safeId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : String(id).replace(/["\\]/g, '\\$&');
+          const item = root.querySelector(`.notif-item[data-notif-id="${safeId}"]`);
           if (!item || item.dataset.notifRead === '1') return;
           const button = item.querySelector('[data-notif-mark]');
           if (button) button.disabled = true;

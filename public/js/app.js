@@ -19,15 +19,27 @@
     function initDarkMode() {
         const root = document.documentElement;
         const stored = localStorage.getItem("sg_theme");
-        if (stored === "dark") root.classList.add("dark");
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const isDark = stored ? stored === "dark" : prefersDark;
+        root.classList.toggle("dark", isDark);
 
         document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+            const syncButtonState = () => {
+                const dark = root.classList.contains("dark");
+                btn.setAttribute("aria-pressed", String(dark));
+                btn.title = dark ? "Switch to light mode" : "Switch to dark mode";
+                btn.innerHTML = dark
+                    ? '<i data-lucide="sun" class="w-5 h-5"></i>'
+                    : '<i data-lucide="moon" class="w-5 h-5"></i>';
+                if (window.lucide) window.lucide.createIcons();
+            };
+
+            syncButtonState();
             btn.addEventListener("click", () => {
-                root.classList.toggle("dark");
-                localStorage.setItem(
-                    "sg_theme",
-                    root.classList.contains("dark") ? "dark" : "light",
-                );
+                const nextDark = !root.classList.contains("dark");
+                root.classList.toggle("dark", nextDark);
+                localStorage.setItem("sg_theme", nextDark ? "dark" : "light");
+                syncButtonState();
             });
         });
     }

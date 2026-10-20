@@ -383,13 +383,23 @@ it('saves and removes an authorized signature with signatory and audit metadata'
 
     $this->get(route('registrar-signature'))->assertOk()->assertHeader('content-type', 'image/png');
 
-    $this->delete(route('registrar.signature.remove'))
+    $student = makeRegistrarWorkflowUser('student', 'signature-student@example.test');
+    $this->actingAs($student)
+        ->get(route('student.grades'))
+        ->assertOk()
+        ->assertSee('Alex Registrar')
+        ->assertSee('College Registrar');
+    $this->get(route('registrar-signature'))
+        ->assertOk()
+        ->assertHeader('content-type', 'image/png');
+
+    $this->actingAs($registrar)
+        ->delete(route('registrar.signature.remove'))
         ->assertRedirect(route('registrar.settings', ['tab' => 'tab-signature']));
 
     expect(Setting::get('registrar_signature_path'))->toBeNull();
     Storage::disk('local')->assertMissing($signaturePath);
 
-    $student = makeRegistrarWorkflowUser('student', 'signature-student@example.test');
     $this->actingAs($student)
         ->post(route('registrar.signature.update'), [])
         ->assertForbidden();

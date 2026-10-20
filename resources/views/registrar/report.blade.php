@@ -89,7 +89,7 @@
       @if ($signatureUrl)
         <img src="{{ $signatureUrl }}" alt="Official registrar signature">
       @else
-        <div style="height:76px"></div>
+        <div style="height: 76px"></div>
       @endif
       <div class="signature-line">{{ $signatoryName }}</div>
       <div>College Registrar</div>

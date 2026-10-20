@@ -46,7 +46,7 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
 
 Route::middleware('auth')->group(function () {
     Route::get('/registrar-signature', [AdminSettingController::class, 'signatureImage'])
-        ->middleware('role:admin,teacher,registrar')
+        ->middleware('role:admin,teacher,registrar,student')
         ->name('registrar-signature');
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\SchoolYear;
+use App\Models\Setting;
 use App\Models\Subject;
 use App\Services\EnrollmentSyncService;
 use Illuminate\Http\Request;
@@ -186,6 +187,10 @@ class StudentController extends Controller
             'gwa' => $gwa,
             'enrollments' => $enrollments,
             'schoolYear' => $schoolYear,
+            'signatureUrl' => Setting::get('registrar_signature_path')
+                ? route('registrar-signature')
+                : null,
+            'signatoryName' => Setting::get('registrar_signatory_name', 'College Registrar'),
         ]);
     }
 

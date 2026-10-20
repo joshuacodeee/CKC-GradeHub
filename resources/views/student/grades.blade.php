@@ -271,17 +271,23 @@
               <div class="text-center">
                 <div style="height: 60px;"></div>
                 <div class="border-t pt-1" style="border-color: #000;">
-                  <p class="font-semibold" style="color: #000;">_________________________</p>
-                  <p class="text-xs mt-0.5 font-semibold" style="color: #000;">College Registrar</p>
-                  <p class="text-[10px]" style="color: #555;">Christ the King College</p>
-                </div>
-              </div>
-              <div class="text-center">
-                <div style="height: 60px;"></div>
-                <div class="border-t pt-1" style="border-color: #000;">
                   <p class="text-[10px] mt-1" style="color: #555;">Date issued: {{ $printedAt }}</p>
                   <p class="text-[10px]" style="color: #555;">Reference: CKC-GH/{{ $schoolYearName }}/{{ $studentId }}</p>
                 </div>
+              </div>
+              <div class="text-center">
+                <div style="height: 78px;"></div>
+                <div class="relative mx-auto h-[68px] w-full max-w-[260px]">
+                  @if ($signatureUrl)
+                    <img src="{{ $signatureUrl }}" alt="Official registrar signature"
+                      class="absolute inset-x-0 bottom-0 z-10 mx-auto max-h-[68px] max-w-[190px] object-contain">
+                  @endif
+                  <p class="absolute inset-x-0 bottom-2 border-b border-black pb-1 text-xs font-bold" style="color: #000;">
+                    {{ $signatoryName }}
+                  </p>
+                </div>
+                <p class="text-[10px] font-semibold" style="color: #000;">College Registrar</p>
+                <p class="text-[10px]" style="color: #555;">Christ the King College</p>
               </div>
             </div>
           </div>

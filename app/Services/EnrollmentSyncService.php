@@ -34,7 +34,7 @@ class EnrollmentSyncService
     /**
      * The current school year, resolved once. Caller may override.
      */
-    public function currentSchoolYear(): SchoolYear
+    public function currentSchoolYear(): ?SchoolYear
     {
         return SchoolYear::where('is_current', true)->first()
             ?? SchoolYear::where('is_active', true)->latest()->first()
@@ -329,9 +329,14 @@ class EnrollmentSyncService
      */
     public function resolveEnrollmentId(User $student, TeacherSubject $offering, bool $createIfMissing = false): ?int
     {
+        $schoolYear = $offering->school_year_id
+            ? SchoolYear::find($offering->school_year_id)
+            : $this->currentSchoolYear();
+
         $enrollment = Enrollment::where('student_id', $student->id)
             ->where('section_id', $offering->section_id)
             ->where('status', 'enrolled')
+            ->when($schoolYear, fn ($query) => $query->where('school_year_id', $schoolYear->id))
             ->first();
         if ($enrollment) {
             return $enrollment->id;
@@ -339,14 +344,49 @@ class EnrollmentSyncService
         if (!$createIfMissing) {
             return null;
         }
-        $schoolYear = $offering->school_year_id
-            ? SchoolYear::find($offering->school_year_id)
-            : $this->currentSchoolYear();
         return Enrollment::create([
             'student_id' => $student->id,
             'section_id' => $offering->section_id,
             'school_year_id' => $schoolYear?->id,
             'status' => 'enrolled',
         ])->id;
+    }
+
+    /**
+     * Add a student to a single teacher offering while preventing the same
+     * subject from being enrolled twice in one school year and semester.
+     */
+    public function assignToOffering(User $student, TeacherSubject $offering, User $assignedBy): bool
+    {
+        return DB::transaction(function () use ($student, $offering, $assignedBy): bool {
+            User::whereKey($student->id)->lockForUpdate()->firstOrFail();
+
+            $schoolYear = $offering->school_year_id
+                ? SchoolYear::findOrFail($offering->school_year_id)
+                : $this->currentSchoolYear();
+
+            $duplicate = ClassOfferingStudent::where('student_id', $student->id)
+                ->where('class_offering_student.school_year_id', $schoolYear?->id)
+                ->whereHas('teacherSubject', fn ($query) => $query
+                    ->where('subject_id', $offering->subject_id)
+                    ->where('semester', $offering->semester))
+                ->exists();
+
+            if ($duplicate) {
+                return false;
+            }
+
+            ClassOfferingStudent::create([
+                'teacher_subject_id' => $offering->id,
+                'student_id' => $student->id,
+                'school_year_id' => $schoolYear?->id,
+                'assigned_by' => $assignedBy->id,
+                'assigned_at' => now(),
+            ]);
+
+            $this->ensureDraftGrade($offering, $student);
+
+            return true;
+        });
     }
 }

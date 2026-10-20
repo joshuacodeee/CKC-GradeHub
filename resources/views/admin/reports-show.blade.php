@@ -331,9 +331,11 @@
                                 style="max-width: 220px; max-height: 58px; object-fit: contain;">
                         @endif
                     </div>
-                    <div class="border-t pt-1" style="border-color: #000;">
-                        <p class="font-semibold" style="color: #000;">_________________________</p>
-                        <p class="text-xs mt-0.5 font-semibold" style="color: #000;">College Registrar</p>
+                    <div class="pt-1">
+                        <p class="mx-auto w-[220px] border-b border-black pb-1 text-xs font-semibold" style="color: #000;">
+                            {{ $signatoryName }}
+                        </p>
+                        <p class="text-[10px] mt-0.5" style="color: #555;">College Registrar</p>
                         <p class="text-[10px]" style="color: #555;">Christ the King College</p>
                     </div>
                 </div>

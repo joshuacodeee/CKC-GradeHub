@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
+    $this->withoutVite();
+
     foreach (['users', 'school_years', 'settings', 'subjects', 'sections', 'enrollments', 'grades'] as $table) {
         Schema::dropIfExists($table);
     }

@@ -8,7 +8,6 @@ use App\Models\SchoolYear;
 use App\Models\User;
 use App\Services\EnrollmentSyncService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AdminSectionController extends Controller
 {
@@ -152,7 +151,7 @@ class AdminSectionController extends Controller
                 ->where('section_id', $section->id)
                 ->where('status', 'enrolled')
                 ->exists();
-            $service->syncForStudent($student, $schoolYear, Auth::user());
+            $service->syncForStudent($student, $schoolYear);
             $after = Enrollment::where('student_id', $student->id)
                 ->where('section_id', $section->id)
                 ->where('status', 'enrolled')

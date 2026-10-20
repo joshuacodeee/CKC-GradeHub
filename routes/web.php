@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RegistrarController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
@@ -101,6 +102,8 @@ Route::middleware('auth')->group(function () {
 
         // School years (under settings)
         Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
+        Route::post('/settings/signature', [AdminSettingController::class, 'updateSignature'])->name('signature.update');
+        Route::delete('/settings/signature', [AdminSettingController::class, 'removeSignature'])->name('signature.remove');
         Route::post('/settings/school-years', [AdminSettingController::class, 'storeSchoolYear'])->name('school-years.store');
         Route::put('/settings/school-years/{schoolYear}/activate', [AdminSettingController::class, 'activateSchoolYear'])->name('school-years.activate');
         Route::put('/settings/school-info', [AdminSettingController::class, 'updateSchoolInfo'])->name('school-info.update');
@@ -153,12 +156,17 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:registrar')->prefix('registrar')->name('registrar.')->group(function () {
-        Route::get('/dashboard', fn () => redirect()->route('registrar.students'))->name('dashboard');
-        Route::get('/students', [AdminUserController::class, 'registrarStudents'])->name('students');
+        Route::get('/dashboard', [RegistrarController::class, 'dashboard'])->name('dashboard');
+        Route::get('/students', [RegistrarController::class, 'students'])->name('students');
+        Route::get('/students/{student}', [RegistrarController::class, 'show'])->name('students.show');
+        Route::patch('/students/{student}/irregular', [RegistrarController::class, 'toggleIrregular'])->name('students.irregular');
+        Route::post('/students/{student}/subjects', [RegistrarController::class, 'assignSubject'])->name('students.subjects.assign');
+        Route::get('/students/{student}/report', [RegistrarController::class, 'printReport'])->name('students.report');
         Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
         Route::get('/reports/{assignment}', [AdminReportController::class, 'show'])->name('reports.show');
         Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
         Route::post('/settings/signature', [AdminSettingController::class, 'updateSignature'])->name('signature.update');
+        Route::delete('/settings/signature', [AdminSettingController::class, 'removeSignature'])->name('signature.remove');
         Route::get('/profile', [AdminProfileController::class, 'profile'])->name('profile');
         Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');

@@ -220,127 +220,166 @@
       <div data-tab-panel id="tab-general" class="hidden">
         <div class="sg-card p-5">
           <h3 class="font-display font-semibold mb-1" style="color:var(--sg-text)">School Information</h3>
-          <p class="text-sm mb-5" style="color:var(--sg-text-muted)">
-            Used on printed reports and the school header throughout the system.
-          </p>
+          <p class="text-sm mb-5" style="color:var(--sg-text-muted)">Used on printed reports and the school header throughout the system.</p>
 
-          @if ($errors->any())
-            <div class="mb-4 rounded-xl p-3.5 flex items-start gap-3 border"
-              style="background:var(--sg-danger-bg); border-color:var(--sg-danger) !important;">
-              <i data-lucide="circle-x" class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:var(--sg-danger)"></i>
-              <div class="text-sm">
-                <p class="font-semibold" style="color:var(--sg-text)">Please fix the following:</p>
-                <ul class="mt-1 list-disc list-inside text-xs space-y-0.5" style="color:var(--sg-text-muted)">
-                  @foreach ($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                  @endforeach
-                </ul>
-              </div>
-              @endif
-
-              <div data-tab-panel id="tab-signature" class="{{ ($role ?? 'admin') === 'registrar' ? '' : 'hidden' }}">
-                <div class="sg-card p-5">
-                  <h3 class="font-display font-semibold mb-1" style="color:var(--sg-text)">Registrar Signature</h3>
-                  <p class="text-sm mb-5" style="color:var(--sg-text-muted)">
-                    Upload a clear signature on white or off-white paper. The background is removed in this browser before upload.
-                  </p>
-
-                  @if ($errors->any())
-                    <div class="mb-4 rounded-xl p-3.5 border" role="alert"
-                      style="background:var(--sg-danger-bg); border-color:var(--sg-danger) !important; color:var(--sg-danger)">
-                      @foreach ($errors->all() as $err)
-                        <p>{{ $err }}</p>
-                      @endforeach
-                    </div>
-                  @endif
-
-                  @if ($signatureUrl)
-                    <div class="mb-5">
-                      <p class="text-sm font-medium mb-2" style="color:var(--sg-text)">Current signature</p>
-                      <div class="inline-flex items-center justify-center rounded-xl border p-4 bg-white"
-                        style="border-color:var(--sg-border); min-width:240px; min-height:100px">
-                        <img src="{{ $signatureUrl }}" alt="Current registrar signature" class="max-h-20 max-w-full object-contain">
-                      </div>
-                    </div>
-                  @endif
-
-                  <form id="signature-upload-form" method="POST" enctype="multipart/form-data"
-                    action="{{ route(($role ?? 'admin') . '.signature.update') }}" class="space-y-4">
-                    @csrf
-                    <div>
-                      <label for="signature-source" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">
-                        Choose signature image
-                      </label>
-                      <input id="signature-source" type="file" accept="image/png,image/jpeg,image/webp" required
-                        class="sg-input !h-auto !py-2">
-                      <p class="text-xs mt-1" style="color:var(--sg-text-muted)">PNG, JPEG, or WebP; background removal is automatic.</p>
-                    </div>
-
-                    <input id="signature-processed" type="file" name="signature" required tabindex="-1" aria-hidden="true"
-                      class="absolute w-px h-px opacity-0 pointer-events-none">
-                    <p id="signature-status" class="text-sm hidden" role="status" aria-live="polite"></p>
-
-                    <div id="signature-preview-wrap" class="hidden">
-                      <p class="text-sm font-medium mb-2" style="color:var(--sg-text)">Transparent preview</p>
-                      <div class="inline-flex items-center justify-center rounded-xl border p-4"
-                        style="border-color:var(--sg-border); min-width:240px; min-height:100px; background-color:#fff; background-image:linear-gradient(45deg,#eee 25%,transparent 25%),linear-gradient(-45deg,#eee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eee 75%),linear-gradient(-45deg,transparent 75%,#eee 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0">
-                        <img id="signature-preview" alt="Signature with background removed" class="max-h-24 max-w-full object-contain">
-                      </div>
-                    </div>
-
-                    <div class="flex justify-end pt-2">
-                      <button id="signature-submit" type="submit" class="sg-btn sg-btn-primary" disabled>
-                        <i data-lucide="upload" class="w-4 h-4"></i> Save Signature
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+          @if ($errors->any() && request()->query('tab') === 'tab-general')
+            <div class="mb-4 rounded-xl p-3.5 border" role="alert"
+              style="background:var(--sg-danger-bg); border-color:var(--sg-danger) !important; color:var(--sg-danger)">
+              @foreach ($errors->all() as $err)<p>{{ $err }}</p>@endforeach
             </div>
           @endif
 
           <form method="POST" action="{{ route('admin.school-info.update') }}" class="space-y-4">
             @csrf
             @method('PUT')
-
             <div>
-              <label for="school_name" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">School
-                Name</label>
+              <label for="school_name" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">School Name</label>
               <input type="text" id="school_name" name="school_name" required maxlength="255"
                 value="{{ old('school_name', $settings['school_name']) }}" class="sg-input">
             </div>
-
             <div>
-              <label for="school_address" class="block text-sm font-medium mb-1.5"
-                style="color:var(--sg-text)">Address</label>
+              <label for="school_address" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Address</label>
               <input type="text" id="school_address" name="school_address" maxlength="500"
-                value="{{ old('school_address', $settings['school_address']) }}" placeholder="Street, City, Province"
-                class="sg-input">
+                value="{{ old('school_address', $settings['school_address']) }}" class="sg-input">
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label for="school_contact" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Contact
-                  Number</label>
+                <label for="school_contact" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Contact Number</label>
                 <input type="text" id="school_contact" name="school_contact" maxlength="50"
-                  value="{{ old('school_contact', $settings['school_contact']) }}" placeholder="e.g. (088) 123-4567"
-                  class="sg-input">
+                  value="{{ old('school_contact', $settings['school_contact']) }}" class="sg-input">
               </div>
               <div>
-                <label for="school_email" class="block text-sm font-medium mb-1.5"
-                  style="color:var(--sg-text)">Email</label>
+                <label for="school_email" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Email</label>
                 <input type="email" id="school_email" name="school_email" maxlength="255"
-                  value="{{ old('school_email', $settings['school_email']) }}" placeholder="info@ckcgingoog.edu.ph"
-                  class="sg-input">
+                  value="{{ old('school_email', $settings['school_email']) }}" class="sg-input">
               </div>
             </div>
-
             <div class="flex justify-end pt-2">
-              <button type="submit" class="sg-btn sg-btn-primary">
-                <i data-lucide="check" class="w-4 h-4"></i> Save Changes
+              <button type="submit" class="sg-btn sg-btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      @endif
+
+      {{-- ───── Signature Settings ───── --}}
+      <div data-tab-panel id="tab-signature" class="{{ ($role ?? 'admin') === 'registrar' ? '' : 'hidden' }}">
+        <div class="sg-card p-5 space-y-6" data-signature-settings>
+          <div>
+            <h3 class="font-display font-semibold mb-1" style="color:var(--sg-text)">Official Signature Settings</h3>
+            <p class="text-sm" style="color:var(--sg-text-muted)">
+              Upload a JPG, JPEG, or PNG and remove its background locally in this browser, or draw a signature below.
+              The original image is not sent to an image-processing service.
+            </p>
+          </div>
+
+          @if ($errors->any() && request()->query('tab') === 'tab-signature')
+            <div class="rounded-xl p-3.5 border" role="alert"
+              style="background:var(--sg-danger-bg); border-color:var(--sg-danger) !important; color:var(--sg-danger)">
+              @foreach ($errors->all() as $err)<p>{{ $err }}</p>@endforeach
+            </div>
+          @endif
+
+          @if ($signatureUrl)
+            <div>
+              <p class="text-sm font-medium mb-2" style="color:var(--sg-text)">Current saved signature</p>
+              <div class="inline-flex items-center justify-center rounded-xl border p-4 bg-white"
+                style="border-color:var(--sg-border); min-width:240px; min-height:100px">
+                <img src="{{ $signatureUrl }}" alt="Current official signature" class="max-h-20 max-w-full object-contain">
+              </div>
+              <form method="POST" action="{{ route(($role ?? 'admin') . '.signature.remove') }}" class="mt-3"
+                onsubmit="return confirm('Remove the saved official signature?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="sg-btn sg-btn-outline" style="color:var(--sg-danger)">Remove saved signature</button>
+              </form>
+            </div>
+          @endif
+
+          <form id="signature-upload-form" method="POST" enctype="multipart/form-data"
+            action="{{ route(($role ?? 'admin') . '.signature.update') }}" class="space-y-4">
+            @csrf
+            <h4 class="font-semibold" style="color:var(--sg-text)">Option A · Upload and remove background</h4>
+            <div>
+              <label for="signature-source" class="block text-sm font-medium mb-1.5" style="color:var(--sg-text)">Signature image</label>
+              <input id="signature-source" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                class="sg-input !h-auto !py-2">
+              <p class="text-xs mt-1" style="color:var(--sg-text-muted)">JPG/JPEG or PNG, up to 10 MB. Image segmentation runs on this device; the processed transparent PNG is uploaded only after you save.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="upload-signatory-name" class="block text-sm font-medium mb-1.5">Signatory name</label>
+                <input id="upload-signatory-name" name="signatory_name" type="text" maxlength="255" required class="sg-input"
+                  value="{{ old('signatory_name', $settings['signatory_name']) }}">
+              </div>
+              <div>
+                <label for="upload-signatory-position" class="block text-sm font-medium mb-1.5">Official position</label>
+                <input id="upload-signatory-position" name="signatory_position" type="text" maxlength="255" required class="sg-input"
+                  value="{{ old('signatory_position', $settings['signatory_position']) }}">
+              </div>
+            </div>
+            <input id="signature-processed" type="file" name="signature" tabindex="-1" aria-hidden="true"
+              class="absolute w-px h-px opacity-0 pointer-events-none">
+            <p id="signature-status" class="text-sm hidden" role="status" aria-live="polite"></p>
+            <div id="signature-preview-wrap" class="hidden">
+              <p class="text-sm font-medium mb-2" style="color:var(--sg-text)">Processed transparent PNG preview</p>
+              <div class="inline-flex items-center justify-center rounded-xl border p-4"
+                style="border-color:var(--sg-border); min-width:240px; min-height:100px; background-color:#fff; background-image:linear-gradient(45deg,#eee 25%,transparent 25%),linear-gradient(-45deg,#eee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eee 75%),linear-gradient(-45deg,transparent 75%,#eee 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0">
+                <img id="signature-preview" alt="Signature with background removed" class="max-h-24 max-w-full object-contain">
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button id="signature-submit" type="submit" class="sg-btn sg-btn-primary" disabled>
+                <i data-lucide="upload" class="w-4 h-4"></i> Save uploaded signature
               </button>
             </div>
           </form>
+
+          <form id="draw-signature-form" method="POST" enctype="multipart/form-data"
+            action="{{ route(($role ?? 'admin') . '.signature.update') }}" class="space-y-4 border-t pt-5"
+            style="border-color:var(--sg-border)">
+            @csrf
+            <h4 class="font-semibold" style="color:var(--sg-text)">Option B · Draw or write a signature</h4>
+            <p class="text-xs" style="color:var(--sg-text-muted)">Use a mouse, touchscreen, or stylus. The saved PNG has a transparent background.</p>
+            <canvas id="signature-pad" class="w-full rounded-xl border bg-white touch-none"
+              style="height:180px; border-color:var(--sg-border); touch-action:none" aria-label="Draw your signature"></canvas>
+            <div class="flex gap-2">
+              <button id="signature-clear" type="button" class="sg-btn sg-btn-outline">Clear and redraw</button>
+            </div>
+            <div id="draw-preview-wrap" class="hidden">
+              <p class="text-sm font-medium mb-2">Drawing preview</p>
+              <div class="inline-flex rounded-xl border p-3 bg-white" style="border-color:var(--sg-border)">
+                <img id="draw-signature-preview" alt="Signature drawing preview" class="max-h-20 max-w-full object-contain">
+              </div>
+            </div>
+            <input id="draw-signature-file" type="file" name="signature" tabindex="-1" aria-hidden="true"
+              class="absolute w-px h-px opacity-0 pointer-events-none">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="draw-signatory-name" class="block text-sm font-medium mb-1.5">Signatory name</label>
+                <input id="draw-signatory-name" name="signatory_name" type="text" maxlength="255" required class="sg-input"
+                  value="{{ old('signatory_name', $settings['signatory_name']) }}">
+              </div>
+              <div>
+                <label for="draw-signatory-position" class="block text-sm font-medium mb-1.5">Official position</label>
+                <input id="draw-signatory-position" name="signatory_position" type="text" maxlength="255" required class="sg-input"
+                  value="{{ old('signatory_position', $settings['signatory_position']) }}">
+              </div>
+            </div>
+            <p id="draw-signature-status" class="text-sm hidden" role="status" aria-live="polite"></p>
+            <div class="flex justify-end">
+              <button id="draw-signature-submit" type="submit" class="sg-btn sg-btn-primary" disabled>
+                <i data-lucide="save" class="w-4 h-4"></i> Save drawn signature
+              </button>
+            </div>
+          </form>
+
+          @if ($signatureUpdatedAt)
+            <p class="text-xs" style="color:var(--sg-text-muted)">
+              Last updated {{ \Illuminate\Support\Carbon::parse($signatureUpdatedAt)->format('M j, Y g:i A') }}
+              @if ($signatureUpdatedBy) by {{ $signatureUpdatedBy->full_name }} @endif
+            </p>
+          @endif
         </div>
       </div>
     </div>
@@ -419,95 +458,8 @@
           recompute();
         })();
 
-        const form = document.getElementById('signature-upload-form');
-        const source = document.getElementById('signature-source');
-        const processed = document.getElementById('signature-processed');
-        const preview = document.getElementById('signature-preview');
-        const previewWrap = document.getElementById('signature-preview-wrap');
-        const status = document.getElementById('signature-status');
-        const submit = document.getElementById('signature-submit');
-        let previewObjectUrl = null;
-
-        const setSignatureStatus = (message, isError = false) => {
-          status.textContent = message;
-          status.classList.remove('hidden');
-          status.style.color = isError ? 'var(--sg-danger)' : 'var(--sg-text-muted)';
-        };
-
-        source?.addEventListener('change', async () => {
-          processed.value = '';
-          submit.disabled = true;
-          previewWrap.classList.add('hidden');
-          status.classList.add('hidden');
-          if (previewObjectUrl) {
-            URL.revokeObjectURL(previewObjectUrl);
-            previewObjectUrl = null;
-          }
-          const file = source.files?.[0];
-          if (!file) return;
-
-          if (!file.type.startsWith('image/')) {
-            setSignatureStatus('Choose a valid image file.', true);
-            return;
-          }
-          if (file.size > 10 * 1024 * 1024) {
-            setSignatureStatus('The selected image must be 10 MB or smaller.', true);
-            return;
-          }
-
-          try {
-            const imageUrl = URL.createObjectURL(file);
-            const image = new Image();
-            image.src = imageUrl;
-            try {
-              await image.decode();
-            } finally {
-              URL.revokeObjectURL(imageUrl);
-            }
-
-            const scale = Math.min(1, 2400 / Math.max(image.naturalWidth, image.naturalHeight));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-            const context = canvas.getContext('2d', { willReadFrequently: true });
-            if (!context) throw new Error('This browser cannot process the selected image.');
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-            const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < pixels.data.length; i += 4) {
-              const luminance = 0.299 * pixels.data[i] + 0.587 * pixels.data[i + 1] + 0.114 * pixels.data[i + 2];
-              const alpha = luminance >= 248 ? 0 : luminance <= 170 ? 255 : Math.round((248 - luminance) / 78 * 255);
-              pixels.data[i] = 16;
-              pixels.data[i + 1] = 36;
-              pixels.data[i + 2] = 67;
-              pixels.data[i + 3] = Math.min(pixels.data[i + 3], alpha);
-            }
-            context.putImageData(pixels, 0, 0);
-
-            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-            if (!blob) throw new Error('Could not create the transparent PNG. Try another image.');
-            if (blob.size > 5 * 1024 * 1024) throw new Error('The processed signature image is larger than 5 MB. Try a smaller image.');
-            const cleanedFile = new File([blob], 'registrar-signature.png', { type: 'image/png' });
-            const transfer = new DataTransfer();
-            transfer.items.add(cleanedFile);
-            processed.files = transfer.files;
-            previewObjectUrl = URL.createObjectURL(blob);
-            preview.src = previewObjectUrl;
-            previewWrap.classList.remove('hidden');
-            submit.disabled = false;
-            setSignatureStatus('Background removed. Review the preview, then save.');
-          } catch (error) {
-            setSignatureStatus(error.message || 'Could not process the image. Try another file.', true);
-          }
-        });
-
-        form?.addEventListener('submit', (event) => {
-          if (!processed.files?.length) {
-            event.preventDefault();
-            setSignatureStatus('Select an image and wait for background removal before saving.', true);
-          }
-        });
       </script>
+      @vite('resources/js/signature-settings.js')
     @endpush
   @endonce
 @endsection

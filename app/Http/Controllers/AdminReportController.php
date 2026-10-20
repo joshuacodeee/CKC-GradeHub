@@ -89,6 +89,8 @@ class AdminReportController extends Controller
             'signatureUrl' => Setting::get('registrar_signature_path')
                 ? route('registrar-signature')
                 : null,
+            'signatoryName' => Setting::get('registrar_signatory_name', 'College Registrar'),
+            'signatoryPosition' => Setting::get('registrar_signatory_position', 'College Registrar'),
         ]);
     }
 
@@ -173,6 +175,8 @@ class AdminReportController extends Controller
             'signatureUrl'   => Setting::get('registrar_signature_path')
                 ? route('registrar-signature')
                 : null,
+            'signatoryName' => Setting::get('registrar_signatory_name', 'College Registrar'),
+            'signatoryPosition' => Setting::get('registrar_signatory_position', 'College Registrar'),
         ]);
     }
 }

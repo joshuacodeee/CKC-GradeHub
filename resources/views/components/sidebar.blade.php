@@ -40,15 +40,16 @@
                 'route' => 'student.dashboard',
                 'key' => 'dashboard',
             ],
-
-            'registrar' => [
-                ['label' => 'Students', 'icon' => 'users', 'route' => 'registrar.students', 'key' => 'students'],
-                ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'registrar.reports', 'key' => 'reports'],
-                ['label' => 'Settings', 'icon' => 'settings', 'route' => 'registrar.settings', 'key' => 'settings'],
-            ],
             ['label' => 'My Grades', 'icon' => 'square-check', 'route' => 'student.grades', 'key' => 'grades'],
             ['label' => 'Subjects', 'icon' => 'book-open', 'route' => 'student.subjects', 'key' => 'subjects'],
             ['label' => 'Academic Records', 'icon' => 'archive', 'route' => 'student.records', 'key' => 'records'],
+        ],
+
+        'registrar' => [
+            ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'registrar.dashboard', 'key' => 'dashboard'],
+            ['label' => 'Students', 'icon' => 'users', 'route' => 'registrar.students', 'key' => 'students'],
+            ['label' => 'Grade Reports', 'icon' => 'file-bar-chart-2', 'route' => 'registrar.reports', 'key' => 'reports'],
+            ['label' => 'Settings', 'icon' => 'settings', 'route' => 'registrar.settings', 'key' => 'settings'],
         ],
     ];
 

@@ -90,7 +90,8 @@
       @if ($signatureUrl)
         <div class="print-only mt-8 ml-auto w-64 text-center text-xs">
           <img src="{{ $signatureUrl }}" alt="Registrar signature" class="mx-auto max-h-16 max-w-[220px] object-contain">
-          <div class="border-t border-black pt-1 mt-1">College Registrar</div>
+          <div class="border-b border-black pt-1 mt-1 font-semibold">{{ $signatoryName }}</div>
+          <div>College Registrar</div>
           <div>Christ the King College</div>
         </div>
       @endif

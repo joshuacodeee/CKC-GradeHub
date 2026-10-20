@@ -324,9 +324,8 @@ class TeacherController extends Controller
         // Spec §40: a teacher must never access another teacher's assignment.
         abort_unless($teacherSubject->teacher_id === $user->id, 403);
 
-        $schoolYear = $this->currentSchoolYear();
-
         $teacherSubject->load(['subject', 'section', 'schoolYear']);
+        $schoolYear = $teacherSubject->schoolYear ?? $this->currentSchoolYear();
 
         $enrollments = Enrollment::whereIn('student_id', $this->rosterStudentIds($teacherSubject))
             ->where('section_id', $teacherSubject->section_id)
@@ -374,6 +373,21 @@ class TeacherController extends Controller
             403,
             'Student is not enrolled in this subject.'
         );
+
+        $schoolYear = $teacherSubject->school_year_id
+            ? SchoolYear::find($teacherSubject->school_year_id)
+            : $this->currentSchoolYear();
+
+        foreach ($payload as $row) {
+            $enrollmentExists = Enrollment::whereKey($row['enrollment_id'])
+                ->where('student_id', $row['student_id'])
+                ->where('section_id', $teacherSubject->section_id)
+                ->where('status', 'enrolled')
+                ->when($schoolYear, fn ($query) => $query->where('school_year_id', $schoolYear->id))
+                ->exists();
+
+            abort_unless($enrollmentExists, 403, 'Enrollment does not match this class, student, and academic period.');
+        }
 
         $isSubmit = $request->has('action') && $request->input('action') === 'submit';
         $submittedAt = $isSubmit ? now() : null;
@@ -498,6 +512,7 @@ class TeacherController extends Controller
             ->whereIn('student_id', $this->rosterStudentIds($teacherSubject))
             ->where('section_id', $teacherSubject->section_id)
             ->where('status', 'enrolled')
+            ->when($teacherSubject->school_year_id, fn($query) => $query->where('school_year_id', $teacherSubject->school_year_id))
             ->get();
 
         $gradeRows = $enrollments->map(function ($enrollment) use ($teacherSubject) {
@@ -541,6 +556,11 @@ class TeacherController extends Controller
             'gradedCount' => $gradedCount,
             'classAverage' => $classAverage !== null ? round((float) $classAverage, 2) : null,
             'distribution' => $distribution,
+            'signatureUrl' => Setting::get('registrar_signature_path')
+                ? route('registrar-signature')
+                : null,
+            'signatoryName' => Setting::get('registrar_signatory_name', 'College Registrar'),
+            'signatoryPosition' => Setting::get('registrar_signatory_position', 'College Registrar'),
         ];
     }
 

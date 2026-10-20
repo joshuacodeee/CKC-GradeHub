@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Models\SchoolYear;
 use App\Support\GradingScale;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -25,6 +26,8 @@ class AdminSettingController extends Controller
             'grade_weight_final'   => Setting::get('grade_weight_final', '40'),
             'passing_grade'        => Setting::get('passing_grade', '75'),
             'signature_path'       => Setting::get('registrar_signature_path'),
+            'signatory_name'       => Setting::get('registrar_signatory_name', 'College Registrar'),
+            'signatory_position'   => Setting::get('registrar_signatory_position', 'College Registrar'),
         ];
 
         return view('admin.settings', [
@@ -34,6 +37,10 @@ class AdminSettingController extends Controller
             'role'         => auth()->user()->role,
             'signatureUrl' => $settings['signature_path']
                 ? route('registrar-signature')
+                : null,
+            'signatureUpdatedAt' => Setting::get('registrar_signature_updated_at'),
+            'signatureUpdatedBy' => Setting::get('registrar_signature_updated_by')
+                ? \App\Models\User::find(Setting::get('registrar_signature_updated_by'))
                 : null,
         ]);
     }
@@ -85,6 +92,8 @@ class AdminSettingController extends Controller
         $routePrefix = $request->user()->role;
         $validator = Validator::make($request->all(), [
             'signature' => ['required', 'file', 'mimes:png', 'max:5120'],
+            'signatory_name' => ['nullable', 'string', 'max:255'],
+            'signatory_position' => ['nullable', 'string', 'max:255'],
         ], [
             'signature.mimes' => 'Upload the processed PNG signature image.',
         ]);
@@ -103,15 +112,43 @@ class AdminSettingController extends Controller
         }
         $oldPath = Setting::get('registrar_signature_path');
 
-        Setting::set('registrar_signature_path', $newPath);
+        DB::transaction(function () use ($validated, $newPath, $request) {
+            Setting::set('registrar_signature_path', $newPath);
+            Setting::set('registrar_signatory_name', ($validated['signatory_name'] ?? null) ?: 'College Registrar');
+            Setting::set('registrar_signatory_position', ($validated['signatory_position'] ?? null) ?: 'College Registrar');
+            Setting::set('registrar_signature_updated_by', $request->user()->id);
+            Setting::set('registrar_signature_updated_at', now()->toDateTimeString());
+        });
 
         if ($oldPath && $oldPath !== $newPath) {
-            Storage::disk('local')->delete($oldPath);
+            if (Storage::disk('local')->exists($oldPath) && ! Storage::disk('local')->delete($oldPath)) {
+                throw new \RuntimeException('The new signature was saved, but the previous signature file could not be removed.');
+            }
         }
 
         return redirect()
             ->route($routePrefix . '.settings', ['tab' => 'tab-signature'])
-            ->with('success', 'Registrar signature uploaded and saved.');
+            ->with('success', 'Registrar signature saved.');
+    }
+
+    public function removeSignature(Request $request)
+    {
+        $routePrefix = $request->user()->role;
+        $oldPath = Setting::get('registrar_signature_path');
+
+        DB::transaction(function () use ($request) {
+            Setting::set('registrar_signature_path', null);
+            Setting::set('registrar_signature_updated_by', $request->user()->id);
+            Setting::set('registrar_signature_updated_at', now()->toDateTimeString());
+        });
+
+        if ($oldPath && Storage::disk('local')->exists($oldPath) && ! Storage::disk('local')->delete($oldPath)) {
+            throw new \RuntimeException('The signature was removed from settings, but its stored file could not be deleted.');
+        }
+
+        return redirect()
+            ->route($routePrefix . '.settings', ['tab' => 'tab-signature'])
+            ->with('success', 'Registrar signature removed.');
     }
 
     public function signatureImage()

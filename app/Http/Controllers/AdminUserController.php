@@ -90,7 +90,7 @@ class AdminUserController extends Controller
     {
         $service = app(EnrollmentSyncService::class);
         $schoolYear = $service->currentSchoolYear();
-        $service->syncForStudent($student, $schoolYear, Auth::user());
+        $service->syncForStudent($student, $schoolYear);
     }
 
     public function teachers()

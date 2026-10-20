@@ -153,8 +153,9 @@
     }
 
     .signature-line {
-      border-top: 1px solid #333;
-      padding-top: 5px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+      font-weight: 700;
     }
 
     .footer-note {
@@ -316,7 +317,8 @@
     @if (!empty($registrarSignatureUrl))
       <div class="signature-block">
         <img src="{{ $registrarSignatureUrl }}" alt="Registrar signature">
-        <div class="signature-line">Registrar</div>
+        <div class="signature-line">{{ $signatoryName }}</div>
+        <div>College Registrar</div>
       </div>
     @endif
 

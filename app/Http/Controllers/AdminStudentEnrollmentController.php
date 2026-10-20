@@ -127,7 +127,7 @@ class AdminStudentEnrollmentController extends Controller
 
         $service = app(EnrollmentSyncService::class);
         $schoolYear = $service->currentSchoolYear();
-        $result = $service->syncForStudent($student, $schoolYear, Auth::user());
+        $result = $service->syncForStudent($student, $schoolYear);
 
         return redirect()
             ->route('admin.student-enrollment', $student)
@@ -147,7 +147,7 @@ class AdminStudentEnrollmentController extends Controller
 
         $service = app(EnrollmentSyncService::class);
         $schoolYear = $service->currentSchoolYear();
-        $result = $service->syncForStudent($student, $schoolYear, Auth::user());
+        $result = $service->syncForStudent($student, $schoolYear);
 
         return redirect()
             ->route('admin.student-enrollment', $student)
@@ -167,29 +167,13 @@ class AdminStudentEnrollmentController extends Controller
             'teacher_subject_id' => ['required', 'exists:teacher_subjects,id'],
         ]);
 
-        $service = app(EnrollmentSyncService::class);
         $offering = TeacherSubject::findOrFail($data['teacher_subject_id']);
+        $assigned = app(EnrollmentSyncService::class)
+            ->assignToOffering($student, $offering, Auth::user());
 
-        // Refuse if there's already a row, even one the registrar placed.
-        $already = ClassOfferingStudent::where('teacher_subject_id', $offering->id)
-            ->where('student_id', $student->id)
-            ->exists();
-        if ($already) {
-            return back()->with('error', 'Student is already in this class offering.');
+        if (! $assigned) {
+            return back()->with('error', 'Student is already enrolled in this subject for that school year and semester.');
         }
-
-        $schoolYear = $offering->school_year_id
-            ? SchoolYear::find($offering->school_year_id)
-            : $service->currentSchoolYear();
-
-        ClassOfferingStudent::create([
-            'teacher_subject_id' => $offering->id,
-            'student_id' => $student->id,
-            'school_year_id' => $schoolYear?->id,
-            'assigned_by' => Auth::id(),
-            'assigned_at' => now(),
-        ]);
-        $service->ensureDraftGrade($offering, $student);
 
         return redirect()
             ->route('admin.student-enrollment', $student)
